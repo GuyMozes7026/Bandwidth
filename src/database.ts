@@ -3,7 +3,7 @@ import fs from 'fs';
 import sqlite3 from 'sqlite3';
 import sqlite from 'sqlite';
 import { db_path } from '@/../config.json';
-import type { PollInfo } from './types/general-types';
+import type { PollInfo } from '@/types/general-types';
 import type { CommandCooldown, Poll, Rule, ServerSettings } from '@/types/db-types';
 
 let database: sqlite.Database;

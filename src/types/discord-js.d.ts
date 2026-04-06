@@ -1,4 +1,4 @@
-import type { ButtonHandler, CommandHandler, ContextMenuHandler, ModalHandler, SelectMenuHandler } from './general-types';
+import type { ButtonHandler, CommandHandler, ContextMenuHandler, ModalHandler, SelectMenuHandler } from '@/types/general-types';
 import type { Collection } from 'discord.js';
 import type AIMessageProcessor from '@/nlp/message-processor';
 
