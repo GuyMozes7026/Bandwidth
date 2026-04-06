@@ -1,17 +1,12 @@
-const Discord = require('discord.js');
-const cooldownUtils = require('../utils/cooldown');
+import { isInteractionOnCooldown, beginCooldown } from '@/utils/cooldown';
+import type { ChatInputCommandInteraction, GuildMember } from 'discord.js';
 
-/**
- *
- * @param {Discord.ChatInputCommandInteraction} interaction
- */
-async function chatInputCommandHandler(interaction) {
+export default async function chatInputCommandHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	const { commandName } = interaction;
 
-	/** @type {Discord.Collection} */
 	const commands = interaction.client.commands;
 	const command = commands.get(commandName);
-	const memberId = interaction.member.id;
+	const memberId = (interaction.member as GuildMember).id;
 
 	// do nothing if no command
 	if (!command) {
@@ -19,12 +14,11 @@ async function chatInputCommandHandler(interaction) {
 	}
 
 	// check for cooldown and run the command
-	const cooldown = await cooldownUtils.isInteractionOnCooldown(command, memberId);
+	const cooldown = await isInteractionOnCooldown(command, memberId);
 	if (!cooldown) {
 		await command.handler(interaction);
-		if (command.cooldown) {
-			cooldownUtils.beginCooldown(command, memberId);
-		}
+
+		await beginCooldown(command, memberId);
 	} else {
 		await interaction.reply(
 			{
@@ -34,5 +28,3 @@ async function chatInputCommandHandler(interaction) {
 		);
 	}
 }
-
-module.exports = chatInputCommandHandler;

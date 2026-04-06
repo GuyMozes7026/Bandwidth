@@ -130,16 +130,16 @@ async function updateGuildSetting<K extends keyof ServerSettings>(guildId: strin
 	await database.run(`UPDATE server_settings SET ${name}=? WHERE guild_id=?`, [value, guildId]);
 }
 
-async function checkAutomaticHelpDisabled(guildId: string, memberId: number): Promise<boolean> {
+async function checkAutomaticHelpDisabled(guildId: string, memberId: string): Promise<boolean> {
 	const result = await database.get('SELECT EXISTS (SELECT 1 FROM nlp_disabled WHERE guild_id=? AND member_id=? LIMIT 1)', [guildId, memberId]);
 	return Boolean(Object.values(result)[0]); // * Hack. sqlite returns objects not values, need to get the value from the object
 }
 
-async function disableAutomaticHelp(guildId: string, memberId: number): Promise<void> {
+async function disableAutomaticHelp(guildId: string, memberId: string): Promise<void> {
 	await database.run('INSERT OR IGNORE INTO nlp_disabled(guild_id, member_id) VALUES(?, ?)', [guildId, memberId]);
 }
 
-async function enabledAutomaticHelp(guildId: string, memberId: number): Promise<void> {
+async function enabledAutomaticHelp(guildId: string, memberId: string): Promise<void> {
 	await database.run('DELETE FROM nlp_disabled WHERE guild_id=? AND member_id=?', [guildId, memberId]);
 }
 
@@ -148,24 +148,24 @@ async function checkAyLmaoDisabled(guildId: string): Promise<boolean> {
 	return Boolean(result?.ay_lmao_disabled);
 }
 
-async function initMemberCooldown(memberId: number, commandId: string): Promise<void> {
+async function initMemberCooldown(memberId: string, commandId: string): Promise<void> {
 	await database.run('INSERT OR IGNORE INTO command_cooldowns(member_id, command_id, cooldown) VALUES(?, ?, ?)', [memberId, commandId, 0]);
 }
 
-async function updateCommandCooldown(memberId: number, commandId: string, cooldown: number): Promise<void> {
+async function updateCommandCooldown(memberId: string, commandId: string, cooldown: number): Promise<void> {
 	await database.run('UPDATE command_cooldowns SET cooldown=? WHERE member_id=? AND command_id=?', [cooldown, memberId, commandId]);
 }
 
-async function getCommandCooldown(memberId: number, commandId: string): Promise<number> {
+async function getCommandCooldown(memberId: string, commandId: string): Promise<number | undefined> {
 	const result = await database.get<CommandCooldown>('SELECT cooldown FROM command_cooldowns WHERE member_id=? AND command_id=?', [memberId, commandId]);
-	return Number(result?.cooldown);
+	return result && Number(result.cooldown);
 }
 
 async function createPoll(guildId: string | null, pollId: string, channelId: string, title: string, expiryTime: string, options: string[]): Promise<void> {
 	await database.run('INSERT OR IGNORE INTO polls(guild_id, poll_id, channel_id, title, expiry_time, options) VALUES(?, ?, ?, ?, ?, ?)', [guildId, pollId, channelId, title, Number(expiryTime.toString().padEnd(13, '0')), JSON.stringify(options)]);
 }
 
-async function votePoll(memberId: number, pollId: string, vote: number): Promise<boolean> {
+async function votePoll(memberId: string, pollId: string, vote: number): Promise<boolean> {
 	const result = await database.get<Poll>('SELECT votes, voters FROM polls WHERE poll_id=?', [pollId]);
 
 	if (!result) {
@@ -173,7 +173,7 @@ async function votePoll(memberId: number, pollId: string, vote: number): Promise
 	}
 
 	const votes = JSON.parse(result.votes) as number[];
-	const voters = JSON.parse(result.voters) as number[]; // TODO verify
+	const voters = JSON.parse(result.voters) as string[]; // TODO verify
 
 	if (!voters.includes(memberId)) {
 		votes[vote] += 1;

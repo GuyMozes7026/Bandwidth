@@ -1,20 +1,20 @@
 import { EmbedBuilder } from 'discord.js';
 import { initMemberCooldown, getCommandCooldown, updateCommandCooldown } from '@/database';
-import type { CommandHandler } from '@/types/general-types';
+import type { BaseHandler } from '@/types/general-types';
 
-export async function isInteractionOnCooldown(command: CommandHandler, memberId: number): Promise<false | EmbedBuilder> {
+export async function isInteractionOnCooldown(interactionHandler: BaseHandler, memberId: string): Promise<false | EmbedBuilder> {
 	// ? This `cooldown` field doesn't seem to exist. Seems like this function should always return false.
-	// ? `command.cooldown` isn't even used later on so this seems like a mistake
+	// ? The value `command.cooldown` isn't even used later on so this seems like a mistake
 	// if (!command.cooldown) {
 	// 	return false;
 	// }
 
 	// Initialize our cooldown if not already and grab the cooldown
-	await initMemberCooldown(memberId, command.name);
-	const cooldown = await getCommandCooldown(memberId, command.name);
+	await initMemberCooldown(memberId, interactionHandler.name);
+	const cooldown = await getCommandCooldown(memberId, interactionHandler.name);
 
 	// Check if we are still on cooldown or if there has never been a cooldown for this command yet
-	if (cooldown == 0 || Date.now() > cooldown) {
+	if (!cooldown || Date.now() > cooldown) {
 		return false;
 	}
 
@@ -30,15 +30,19 @@ export async function isInteractionOnCooldown(command: CommandHandler, memberId:
 	return cooldownEmbed;
 }
 
-export async function beginCooldown(command: CommandHandler, memberId: number): Promise<void> {
+export async function beginCooldown(interactionHandler: BaseHandler, memberId: string): Promise<void> {
 	// ? same as above, only here it was used, which would result in endTime always being NaN
 	// const { cooldown } = command;
 
-	const cooldown = await getCommandCooldown(memberId, command.name);
+	const cooldown = await getCommandCooldown(memberId, interactionHandler.name);
+
+	if (!cooldown) {
+		return;
+	}
 
 	const endTime = new Date(Date.now() + cooldown).getTime();
 
-	await updateCommandCooldown(memberId, command.name, endTime);
+	await updateCommandCooldown(memberId, interactionHandler.name, endTime);
 }
 
 export function getRelativeTime(timestamp: number): string {

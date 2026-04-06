@@ -1,13 +1,8 @@
-const Discord = require('discord.js');
+import type { StringSelectMenuInteraction } from 'discord.js';
 
-/**
- *
- * @param {Discord.SelectMenuInteraction} interaction
- */
-async function selectMenuHandler(interaction) {
+export default async function selectMenuHandler(interaction: StringSelectMenuInteraction): Promise<void> {
 	const { customId } = interaction;
 
-	/** @type {Discord.Collection} */
 	const selectMenus = interaction.client.selectMenus;
 	const selectMenu = selectMenus.find(selectMenu => customId.startsWith(selectMenu.name)); // hack to be able to append extra metadata to selections
 
@@ -19,5 +14,3 @@ async function selectMenuHandler(interaction) {
 	// run the selectMenu
 	await selectMenu.handler(interaction);
 }
-
-module.exports = selectMenuHandler;

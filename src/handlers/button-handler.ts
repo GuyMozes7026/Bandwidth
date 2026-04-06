@@ -1,13 +1,8 @@
-const Discord = require('discord.js');
+import type { ButtonInteraction } from 'discord.js';
 
-/**
- *
- * @param {Discord.ButtonInteraction} interaction
- */
-async function buttonHandler(interaction) {
+export default async function buttonHandler(interaction: ButtonInteraction): Promise<void> {
 	const { customId } = interaction;
 
-	/** @type {Discord.Collection} */
 	const buttons = interaction.client.buttons;
 	const button = buttons.find(button => customId.startsWith(button.name)); // hack to be able to append extra metadata to buttons
 
@@ -19,5 +14,3 @@ async function buttonHandler(interaction) {
 	// run the button
 	await button.handler(interaction);
 }
-
-module.exports = buttonHandler;

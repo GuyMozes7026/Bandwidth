@@ -1,16 +1,12 @@
-const Discord = require('discord.js');
-const cooldownUtils = require('../utils/cooldown');
+import { isInteractionOnCooldown, beginCooldown } from '@/utils/cooldown';
+import type { GuildMember, ModalSubmitInteraction } from 'discord.js';
 
-/**
- *
- * @param {Discord.ModalSubmitInteraction} interaction
- */
-async function modalSubmitHandler(interaction) {
+export default async function modalSubmitHandler(interaction: ModalSubmitInteraction): Promise<void> {
 	const { customId } = interaction;
 
 	const modals = interaction.client.modals;
 	const modal = modals.find(modal => customId.startsWith(modal.name)); // hack to be able to append extra metadata to modals
-	const memberId = interaction.member.id;
+	const memberId = (interaction.member as GuildMember).id;
 
 	// do nothing if no modal
 	if (!modal) {
@@ -18,12 +14,11 @@ async function modalSubmitHandler(interaction) {
 	}
 
 	// check for cooldown and run the modal
-	const cooldown = await cooldownUtils.isInteractionOnCooldown(modal, memberId);
+	const cooldown = await isInteractionOnCooldown(modal, memberId);
 	if (!cooldown) {
 		await modal.handler(interaction);
-		if (modal.cooldown) {
-			cooldownUtils.beginCooldown(modal, memberId);
-		}
+
+		await beginCooldown(modal, memberId);
 	} else {
 		await interaction.reply(
 			{
@@ -33,5 +28,3 @@ async function modalSubmitHandler(interaction) {
 		);
 	}
 }
-
-module.exports = modalSubmitHandler;

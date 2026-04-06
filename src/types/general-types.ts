@@ -53,3 +53,5 @@ export interface SelectMenuHandler {
 	select_menu: StringSelectMenuBuilder;
 	handler: HandlerFunction<StringSelectMenuInteraction>;
 }
+
+export type BaseHandler = ButtonHandler | CommandHandler | ContextMenuHandler | ModalHandler | SelectMenuHandler;

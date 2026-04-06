@@ -1,13 +1,8 @@
-const Discord = require('discord.js');
+import type { ContextMenuCommandInteraction } from 'discord.js';
 
-/**
- *
- * @param {Discord.ContextMenuInteraction} interaction
- */
-async function contextMenuHandler(interaction) {
+export default async function contextMenuHandler(interaction: ContextMenuCommandInteraction): Promise<void> {
 	const { commandName } = interaction;
 
-	/** @type {Discord.Collection} */
 	const contextMenus = interaction.client.contextMenus;
 	const contextMenu = contextMenus.get(commandName);
 
@@ -19,5 +14,3 @@ async function contextMenuHandler(interaction) {
 	// run the contextMenu
 	await contextMenu.handler(interaction);
 }
-
-module.exports = contextMenuHandler;
