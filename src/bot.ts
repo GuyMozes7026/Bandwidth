@@ -1,11 +1,11 @@
-const Discord = require('discord.js');
-const AIMessageProcessor = require('./nlp/message-processor');
-const readyHandler = require('./events/ready');
-const guildMemberAddHandler = require('./events/guildMemberAdd');
-const interactionCreateHandler = require('./events/interactionCreate');
-const messageCreateHandler = require('./events/messageCreate');
-const threadCreateHandler = require('./events/threadCreate');
-const config = require('../config.json');
+import Discord from 'discord.js';
+import AIMessageProcessor from '@/nlp/message-processor';
+import readyHandler from '@/events/ready';
+import guildMemberAddHandler from '@/events/guildMemberAdd';
+import interactionCreateHandler from '@/events/interactionCreate';
+import messageCreateHandler from '@/events/messageCreate';
+import threadCreateHandler from '@/events/threadCreate';
+import config from '@/../config.json';
 
 const client = new Discord.Client({
 	intents: [
@@ -13,7 +13,7 @@ const client = new Discord.Client({
 		Discord.GatewayIntentBits.Guilds,
 		Discord.GatewayIntentBits.GuildMessages,
 		Discord.GatewayIntentBits.GuildMembers,
-		Discord.GatewayIntentBits.MessageContent,
+		Discord.GatewayIntentBits.MessageContent
 	],
 	partials: [
 		Discord.Partials.Channel,

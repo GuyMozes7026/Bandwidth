@@ -4,7 +4,7 @@
   "description": "Official Pretendo Network Discord community bot",
   "main": "src/bot.js",
   "scripts": {
-    "lint": "./node_modules/.bin/eslint .",
+    "lint": "eslint .",
     "start": "node ./src/bot",
     "start:dev": "NODE_ENV=development node ./src/bot"
   },
@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/PretendoNetwork/Bandwidth#readme",
   "dependencies": {
+    "@discordjs/rest": "^2.6.1",
     "@napi-rs/canvas": "^0.1.40",
     "@pretendonetwork/error-codes": "^1.2.0",
     "axios": "^1.4.0",
@@ -34,9 +35,13 @@
     "sqlite3": "^6.0.1"
   },
   "devDependencies": {
+    "@pretendonetwork/eslint-config": "^0.0.8",
     "@types/fs-extra": "^11.0.4",
-    "eslint": "^10.1.0",
-    "eslint-plugin-jsdoc": "^62.8.1",
-    "typescript": "^6.0.2"
+    "@types/node": "^20.19.39",
+    "eslint": "^9.19.0",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "globals": "^17.4.0",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.58.0"
   }
 }

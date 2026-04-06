@@ -1,16 +1,18 @@
-const path = require('path');
-const fs = require('fs');
-const sqlite3 = require('sqlite3');
-const sqlite = require('sqlite');
-const { db_path } = require('../config.json');
+import path from 'path';
+import fs from 'fs';
+import sqlite3 from 'sqlite3';
+import sqlite from 'sqlite';
+import { db_path } from '@/../config.json';
+import type { PollInfo } from './types/general-types';
+import type { CommandCooldown, Poll, Rule, ServerSettings } from '@/types/db-types';
 
-let database;
+let database: sqlite.Database;
 
 const resolvedDbPath = db_path ?? path.join(__dirname, '../database.db');
 const dbFolder = path.dirname(resolvedDbPath);
 fs.mkdirSync(dbFolder, { recursive: true });
 
-async function connect() {
+async function connect(): Promise<void> {
 	database = await sqlite.open({
 		filename: resolvedDbPath,
 		driver: sqlite3.Database
@@ -115,56 +117,63 @@ async function connect() {
 	)`);
 }
 
-async function initGuild(guildId) {
+async function initGuild(guildId: string): Promise<void> {
 	await database.run('INSERT OR IGNORE INTO server_settings(guild_id) VALUES(?)', [guildId]);
 }
 
-async function getGuildSetting(guildId, name) {
-	return (await database.get(`SELECT ${name} FROM server_settings WHERE guild_id=?`, [guildId]))[name];
+async function getGuildSetting<K extends keyof ServerSettings>(guildId: string, name: K): Promise<ServerSettings[K]> {
+	const result = await database.get<ServerSettings>(`SELECT ${name} FROM server_settings WHERE guild_id=?`, [guildId]);
+	return result?.[name] as ServerSettings[K];
 }
 
-async function updateGuildSetting(guildId, name, value) {
+async function updateGuildSetting<K extends keyof ServerSettings>(guildId: string, name: K, value: ServerSettings[K]): Promise<void> {
 	await database.run(`UPDATE server_settings SET ${name}=? WHERE guild_id=?`, [value, guildId]);
 }
 
-async function checkAutomaticHelpDisabled(guildId, memberId) {
+async function checkAutomaticHelpDisabled(guildId: string, memberId: string): Promise<boolean> {
 	const result = await database.get('SELECT EXISTS (SELECT 1 FROM nlp_disabled WHERE guild_id=? AND member_id=? LIMIT 1)', [guildId, memberId]);
-	return Object.values(result)[0]; // * Hack. sqlite returns objects not values, need to get the value from the object
+	return Boolean(Object.values(result)[0]); // * Hack. sqlite returns objects not values, need to get the value from the object
 }
 
-async function disableAutomaticHelp(guildId, memberId) {
+async function disableAutomaticHelp(guildId: string, memberId: string): Promise<void> {
 	await database.run('INSERT OR IGNORE INTO nlp_disabled(guild_id, member_id) VALUES(?, ?)', [guildId, memberId]);
 }
 
-async function enabledAutomaticHelp(guildId, memberId) {
+async function enabledAutomaticHelp(guildId: string, memberId: string): Promise<void> {
 	await database.run('DELETE FROM nlp_disabled WHERE guild_id=? AND member_id=?', [guildId, memberId]);
 }
 
-async function checkAyLmaoDisabled(guildId) {
-	const result = await database.get('SELECT ay_lmao_disabled FROM server_settings WHERE guild_id=? LIMIT 1', [guildId]);
-	return Boolean(result.ay_lmao_disabled);
+async function checkAyLmaoDisabled(guildId: string): Promise<boolean> {
+	const result = await database.get<ServerSettings>('SELECT ay_lmao_disabled FROM server_settings WHERE guild_id=? LIMIT 1', [guildId]);
+	return Boolean(result?.ay_lmao_disabled);
 }
 
-async function initMemberCooldown(memberId, commandId) {
+async function initMemberCooldown(memberId: string, commandId: string): Promise<void> {
 	await database.run('INSERT OR IGNORE INTO command_cooldowns(member_id, command_id, cooldown) VALUES(?, ?, ?)', [memberId, commandId, 0]);
 }
 
-async function updateCommandCooldown(memberId, commandId, cooldown) {
+async function updateCommandCooldown(memberId: string, commandId: string, cooldown: number): Promise<void> {
 	await database.run('UPDATE command_cooldowns SET cooldown=? WHERE member_id=? AND command_id=?', [cooldown, memberId, commandId]);
 }
 
-async function getCommandCooldown(memberId, commandId) {
-	return (await database.get('SELECT cooldown FROM command_cooldowns WHERE member_id=? AND command_id=?', [memberId, commandId]))['cooldown'];
+async function getCommandCooldown(memberId: string, commandId: string): Promise<string | undefined> {
+	const result = await database.get<CommandCooldown>('SELECT cooldown FROM command_cooldowns WHERE member_id=? AND command_id=?', [memberId, commandId]);
+	return result?.cooldown;
 }
 
-async function createPoll(guildId, pollId, channelId, title, expiryTime, options) {
+async function createPoll(guildId: string | null, pollId: string, channelId: string, title: string, expiryTime: string, options: string[]): Promise<void> {
 	await database.run('INSERT OR IGNORE INTO polls(guild_id, poll_id, channel_id, title, expiry_time, options) VALUES(?, ?, ?, ?, ?, ?)', [guildId, pollId, channelId, title, Number(expiryTime.toString().padEnd(13, '0')), JSON.stringify(options)]);
 }
 
-async function votePoll(memberId, pollId, vote) {
-	const result = await database.get('SELECT votes, voters FROM polls WHERE poll_id=?', [pollId]);
-	const votes = JSON.parse(Object.values(result)[0]);
-	const voters = JSON.parse(Object.values(result)[1]);
+async function votePoll(memberId: string, pollId: string, vote: number): Promise<boolean> {
+	const result = await database.get<Poll>('SELECT votes, voters FROM polls WHERE poll_id=?', [pollId]);
+
+	if (!result) {
+		throw new Error(`Poll ${pollId} not found`);
+	}
+
+	const votes = JSON.parse(result.votes) as number[];
+	const voters = JSON.parse(result.voters) as string[];
 
 	if (!voters.includes(memberId)) {
 		votes[vote] += 1;
@@ -178,39 +187,43 @@ async function votePoll(memberId, pollId, vote) {
 	}
 }
 
-async function getPollInfo(pollId) {
-	const result = await database.get('SELECT title, options, votes, expiry_time FROM polls WHERE poll_id=?', [pollId]);
+async function getPollInfo(pollId: string): Promise<PollInfo> {
+	const poll = await database.get<Poll>('SELECT title, options, votes, expiry_time FROM polls WHERE poll_id=?', [pollId]);
 
-	const title = Object.values(result)[0];
-	const options = JSON.parse(Object.values(result)[1]);
-	const votes = JSON.parse(Object.values(result)[2]);
-	const expiryTime = Number(Object.values(result)[3]);
+	if (!poll) {
+		throw new Error(`Poll ${pollId} not found`);
+	}
 
-	return { title, options, votes, expiryTime };
+	return {
+		title: poll.title,
+		options: JSON.parse(poll.options),
+		votes: JSON.parse(poll.votes) as number[],
+		expiryTime: Number(poll.expiry_time)
+	};
 }
 
-async function getAllPollInfo() {
-	const polls = [];
+async function getAllPollInfo(): Promise<PollInfo[]> {
+	const polls: PollInfo[] = [];
 
-	await database.each('SELECT poll_id, channel_id, title, options, votes, expiry_time FROM polls', (_, row) => {
-		const pollId = Object.values(row)[0];
-		const channelId = Object.values(row)[1];
-		const title = Object.values(row)[2];
-		const options = JSON.parse(Object.values(row)[3]);
-		const votes = JSON.parse(Object.values(row)[4]);
-		const expiryTime = Number(Object.values(row)[5]);
-
-		polls.push({ pollId, channelId, title, options, votes, expiryTime });
+	await database.each<Poll>('SELECT poll_id, channel_id, title, options, votes, expiry_time FROM polls', (_, row) => {
+		polls.push({
+			pollId: row.poll_id,
+			channelId: row.channel_id,
+			title: row.title,
+			options: JSON.parse(row.options),
+			votes: JSON.parse(row.votes) as number[],
+			expiryTime: Number(row.expiry_time)
+		});
 	});
 
 	return polls;
 }
 
-async function closePoll(pollId) {
+async function closePoll(pollId: string): Promise<void> {
 	await database.run('DELETE FROM polls WHERE poll_id=?', [pollId]);
 }
 
-async function doesPollExist(pollId) {
+async function doesPollExist(pollId: string): Promise<boolean> {
 	const poll = await database.get('SELECT COUNT(*) FROM polls WHERE poll_id=? LIMIT 1', [pollId]);
 	if (Object.values(poll)[0] === 0) {
 		return false;
@@ -219,27 +232,27 @@ async function doesPollExist(pollId) {
 	}
 }
 
-async function createRule(guildId, title, description, time) {
+async function createRule(guildId: string, title: string, description: string, time: string): Promise<void> {
 	await database.run('INSERT INTO rules(guild_id, title, description, time) VALUES(?, ?, ?, ?)', [guildId, title, description, time]);
 }
 
-async function updateRule(guildId, id, title, description, time) {
+async function updateRule(guildId: string, id: number, title: string, description: string, time: string): Promise<void> {
 	await database.run('INSERT OR REPLACE INTO rules(guild_id, id, title, description, time) VALUES(?, ?, ?, ?, ?)', [guildId, id, title, description, time]);
 }
 
-async function getRule(guildId, ruleId) {
-	return (await database.get('SELECT id, title, description, time FROM rules WHERE guild_id=? AND id=?', [guildId, ruleId]));
+async function getRule(guildId: string, ruleId: string): Promise<Rule | undefined> {
+	return (await database.get<Rule>('SELECT id, title, description, time FROM rules WHERE guild_id=? AND id=?', [guildId, ruleId]));
 }
 
-async function getAllRules(guildId) {
-	return (await database.all('SELECT id, title, description, time FROM rules WHERE guild_id=?', [guildId]));
+async function getAllRules(guildId: string): Promise<Rule[]> {
+	return (await database.all<Rule[]>('SELECT id, title, description, time FROM rules WHERE guild_id=?', [guildId]));
 }
 
-async function removeRule(guildId, ruleId) {
+async function removeRule(guildId: string, ruleId: string): Promise<void> {
 	await database.run('DELETE FROM rules WHERE guild_id=? AND id=?', [guildId, ruleId]);
 }
 
-module.exports = {
+export {
 	connect,
 	initGuild,
 	getGuildSetting,
