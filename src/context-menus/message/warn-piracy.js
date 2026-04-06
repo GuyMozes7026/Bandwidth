@@ -5,7 +5,7 @@ const database = require('../../database');
 
 /**
  *
- * @param {Discord.ContextMenuInteraction} interaction
+ * @param {Discord.ContextMenuCommandInteraction} interaction
  */
 async function warnPiracyHandler(interaction) {
 	const reportsChannelId = await database.getGuildSetting(interaction.guildId, 'reports_channel_id');
