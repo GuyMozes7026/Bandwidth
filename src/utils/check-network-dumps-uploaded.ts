@@ -17,7 +17,7 @@ async function checkNetworkDumpsUploaded(message) {
 	}
 
 	// * Scan messages for possible network dumps
-	const networkDumps = [...message.attachments.filter(attachment => {
+	const networkDumps = [...message.attachments.filter((attachment) => {
 		if (attachment.name.match(HOKAKU_CAFE_TOKEN_BIN_REGEX)) {
 			return attachment;
 		}
@@ -25,13 +25,13 @@ async function checkNetworkDumpsUploaded(message) {
 		const fileExtension = path.extname(attachment.name.toLowerCase());
 
 		if (
-			fileExtension === '.har' ||   // * HTTP Archive dump
-			fileExtension === '.chls' ||  // * Charles session
+			fileExtension === '.har' || // * HTTP Archive dump
+			fileExtension === '.chls' || // * Charles session
 			fileExtension === '.chlsj' || // * Charles JSON summary
 			fileExtension === '.chlsx' || // * Charles XML summary
-			fileExtension === '.saz' ||   // * Fiddler session
-			fileExtension === '.pcap' ||  // * PCAP
-			fileExtension === '.pcapng'   // * PCAPNG
+			fileExtension === '.saz' || // * Fiddler session
+			fileExtension === '.pcap' || // * PCAP
+			fileExtension === '.pcapng' // * PCAPNG
 		) {
 			return attachment;
 		}
