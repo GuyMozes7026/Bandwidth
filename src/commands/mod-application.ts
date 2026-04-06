@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
-const database = require('../database');
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const database = require('../database');
 const { modal: modApplicationModal } = require('../modals/mod-application');
 
 /**
@@ -15,8 +15,8 @@ async function modApplicationHandler(interaction) {
 			content: 'We are not accepting applications from individuals under the age of 18.',
 			ephemeral: true,
 			allowedMentions: {
-				parse: [], // dont allow tagging anything
-			},
+				parse: [] // dont allow tagging anything
+			}
 		});
 
 		const modType = interaction.options.get('role').value;
@@ -84,7 +84,7 @@ async function modApplicationHandler(interaction) {
 			components: [],
 			files: [
 				__dirname + '/../images/denied-icon.png',
-				__dirname + '/../images/denied-banner.png',
+				__dirname + '/../images/denied-banner.png'
 			]
 		});
 
@@ -107,7 +107,7 @@ const command = new SlashCommandBuilder()
 			.setRequired(true)
 			.addChoices(
 				{ name: 'Discord Moderator', value: 'discord' },
-				//{ name: 'Discord VC Moderator', value: 'vc' },
+				// { name: 'Discord VC Moderator', value: 'vc' },
 				{ name: 'Forum Moderator', value: 'forum' },
 				{ name: 'Network Moderator', value: 'network' },
 				{ name: 'Juxtaposition Moderator', value: 'juxt' }

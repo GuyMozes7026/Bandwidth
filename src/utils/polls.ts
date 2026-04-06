@@ -1,14 +1,13 @@
 const Discord = require('discord.js');
+const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 const database = require('../database');
 const cooldownUtils = require('../utils/cooldown');
-const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 
 /**
  * @param {Number} pollId
  * @param {PollStatus} status
  */
 async function getPollImage(pollId, status) {
-
 	// Poll information
 	const { title, options, votes, expiryTime } = await database.getPollInfo(pollId.toString());
 	const totalVotes = votes.reduce((partialSum, a) => partialSum + a, 0);
@@ -39,7 +38,6 @@ async function getPollImage(pollId, status) {
 	ctx.roundRect(0, 0, canvas.width, canvas.height, 25);
 	ctx.stroke();
 	ctx.fill();
-
 
 	// Title
 	let titleScale = 60;
@@ -128,7 +126,7 @@ async function updatePolls(client) {
 
 		const pollImage = await getPollImage(currentPoll.pollId, PollStatus.Open);
 		const attachment = new Discord.AttachmentBuilder(pollImage, {
-			name: 'image.png',
+			name: 'image.png'
 		});
 
 		message.edit({
@@ -144,7 +142,7 @@ async function closePoll(message) {
 
 	const pollImage = await getPollImage(message.id, PollStatus.Closed);
 	const attachment = new Discord.AttachmentBuilder(pollImage, {
-		name: 'image.png',
+		name: 'image.png'
 	});
 
 	message.edit({

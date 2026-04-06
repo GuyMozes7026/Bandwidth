@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
-const database = require('../database');
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const database = require('../database');
 const { modal: updateRuleModal } = require('../modals/update-rule');
 
 /**
@@ -9,7 +9,7 @@ const { modal: updateRuleModal } = require('../modals/update-rule');
  */
 async function rulesHandler(interaction) {
 	const { guildId } = interaction;
-	//const ruleNumber = interaction.options.getInteger('rule-number');
+	// const ruleNumber = interaction.options.getInteger('rule-number');
 
 	if (interaction.options.getSubcommand() === 'create') {
 		interaction.showModal(updateRuleModal, {
@@ -37,7 +37,7 @@ async function rulesHandler(interaction) {
 		for (let i = 0; i < rules.length; i++) {
 			ruleSelectMenu.addOptions({
 				label: `#${i + 1}: ${rules[i].title}`,
-				value: rules[i].id.toString(),
+				value: rules[i].id.toString()
 			});
 		}
 
@@ -86,5 +86,5 @@ module.exports = {
 	name: command.name,
 	help: 'Change rules of the bot',
 	handler: rulesHandler,
-	deploy: command.toJSON(),
+	deploy: command.toJSON()
 };

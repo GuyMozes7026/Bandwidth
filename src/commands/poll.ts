@@ -67,5 +67,5 @@ module.exports = {
 	name: command.name,
 	help: 'Edit polls',
 	handler: pollHandler,
-	deploy: command.toJSON(),
+	deploy: command.toJSON()
 };

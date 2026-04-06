@@ -32,7 +32,7 @@ async function guildMemberAddHandler(member) {
 	// caught because user could have dm's disabled
 	try {
 		await member.send({
-			embeds: [welcomeEmbed],
+			embeds: [welcomeEmbed]
 		});
 	} catch {}
 
@@ -40,7 +40,6 @@ async function guildMemberAddHandler(member) {
 		const role = guild.roles.cache.get(await database.getGuildSetting(member.guild.id, 'unverified_role_id'));
 		member.roles.add(role);
 	}
-
 }
 
 module.exports = guildMemberAddHandler;

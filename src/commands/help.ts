@@ -31,14 +31,14 @@ async function helpHandler(interaction) {
 		helpEmbed.setDescription('To get detailed information about a command, use `/help <command name>` or `/<command name>` to check the commands description\n\nAll commands are Discord application commands with ephemeral (only visible to you) responses. Context Menu commands are visible via right clicking on a message or user and navigating to `Apps > <command name>`');
 		helpEmbed.setFields([
 			{
-				'name': 'Commands',
-				'value': `\`\`\`\n${commandNames.join('\n')}\`\`\``,
-				'inline': true
+				name: 'Commands',
+				value: `\`\`\`\n${commandNames.join('\n')}\`\`\``,
+				inline: true
 			},
 			{
-				'name': 'Context Menus',
-				'value': `\`\`\`\n${contextMenuNames.join('\n')}\`\`\``,
-				'inline': true
+				name: 'Context Menus',
+				value: `\`\`\`\n${contextMenuNames.join('\n')}\`\`\``,
+				inline: true
 			}
 		]);
 	} else {
@@ -46,8 +46,8 @@ async function helpHandler(interaction) {
 
 		helpEmbed.setFields([
 			{
-				'name': key,
-				'value': interaction.client[collection].get(key).help
+				name: key,
+				value: interaction.client[collection].get(key).help
 			}
 		]);
 	}
@@ -63,7 +63,7 @@ const command = new SlashCommandBuilder();
 command.setDefaultMemberPermissions(Discord.PermissionFlagsBits.SendMessages);
 command.setName('help');
 command.setDescription('Get help');
-command.addStringOption(option => {
+command.addStringOption((option) => {
 	option.setName('command');
 	option.setDescription('Command Name');
 	option.setRequired(false);

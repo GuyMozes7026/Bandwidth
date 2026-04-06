@@ -1,9 +1,8 @@
 const Discord = require('discord.js');
 const cooldownUtils = require('../utils/cooldown');
 
-
 /**
- * 
+ *
  * @param {Discord.ModalSubmitInteraction} interaction
  */
 async function modalSubmitHandler(interaction) {

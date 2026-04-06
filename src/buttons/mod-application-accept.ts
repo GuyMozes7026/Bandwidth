@@ -55,7 +55,7 @@ async function modApplicationAcceptHandler(interaction) {
 		components: [row],
 		files: [
 			__dirname + '/../images/accepted-icon.png',
-			__dirname + '/../images/accepted-banner.png',
+			__dirname + '/../images/accepted-banner.png'
 		]
 	});
 

@@ -79,7 +79,7 @@ async function denyModApplicationHandler(interaction) {
 		components: [row],
 		files: [
 			__dirname + '/../images/denied-icon.png',
-			__dirname + '/../images/denied-banner.png',
+			__dirname + '/../images/denied-banner.png'
 		]
 	});
 

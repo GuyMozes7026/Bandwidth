@@ -2,7 +2,6 @@ const Discord = require('discord.js');
 const database = require('../database');
 const { button: verifyCompleteButton } = require('./verify-complete');
 
-
 const viewRulesButton = new Discord.ButtonBuilder();
 viewRulesButton.setCustomId('view-rules');
 viewRulesButton.setLabel('View Rules');
@@ -60,28 +59,28 @@ async function viewRulesHandler(interaction) {
 
 	let time = rule.time;
 	if (time !== 0) {
-		const timer = setInterval(function countdown() {
+		const timer = setInterval((function countdown() {
 			nextButton.setLabel(time === 0 ? 'Next' : `Next (${time})`);
 			nextButton.setDisabled(time === 0 ? false : true);
 			time -= 1;
 
 			row.setComponents(nextButton);
 
-			if(time === -1) { 
+			if (time === -1) {
 				clearInterval(timer);
 				if (rules[ruleId + 1] === undefined) {
 					row.setComponents(verifyCompleteButton);
-					interaction.editReply({components: [row]});
+					interaction.editReply({ components: [row] });
 				}
 			}
 
-			interaction.editReply({components: [row]});
+			interaction.editReply({ components: [row] });
 			return countdown;
-		}(), 1000);
+		}()), 1000);
 	} else {
 		if (rules[ruleId + 1] === undefined) {
 			row.setComponents(verifyCompleteButton);
-			interaction.editReply({components: [row]});
+			interaction.editReply({ components: [row] });
 		}
 	}
 }

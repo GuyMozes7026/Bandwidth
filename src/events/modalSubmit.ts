@@ -2,7 +2,7 @@ const Discord = require('discord.js');
 const { ModalSubmitInteraction } = require('discord-modals');
 
 /**
- * 
+ *
  * @param {ModalSubmitInteraction} interaction
  */
 async function modalSubmitHandler(interaction) {

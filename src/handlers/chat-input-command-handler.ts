@@ -22,7 +22,7 @@ async function chatInputCommandHandler(interaction) {
 	const cooldown = await cooldownUtils.isInteractionOnCooldown(command, memberId);
 	if (!cooldown) {
 		await command.handler(interaction);
-		if (command.cooldown) { 
+		if (command.cooldown) {
 			cooldownUtils.beginCooldown(command, memberId);
 		}
 	} else {

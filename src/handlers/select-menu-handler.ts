@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 
 /**
- * 
+ *
  * @param {Discord.SelectMenuInteraction} interaction
  */
 async function selectMenuHandler(interaction) {

@@ -31,7 +31,7 @@ function checkForErrorCode(text) {
 	}
 
 	if (embed) {
-		const [ sysmodule, errorCode ] = error.split('-');
+		const [sysmodule, errorCode] = error.split('-');
 
 		const errorInfo = errors.getErrorInfo(sysmodule, errorCode, 'en_US'); // TODO - Custom locale?
 

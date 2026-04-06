@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
+const { StringSelectMenuBuilder, ActionRowBuilder } = require('@discordjs/builders');
 const database = require('../database');
 const pollUtils = require('../utils/polls');
-const { StringSelectMenuBuilder, ActionRowBuilder } = require('@discordjs/builders');
 
 const createPollModal = new Discord.ModalBuilder();
 createPollModal.setCustomId('create-poll');
@@ -17,7 +17,6 @@ async function createPollHandler(interaction) {
 	const optionsCount = parts[3];
 	const expiryTime = parts[4];
 
-
 	const pollSelectMenu = new StringSelectMenuBuilder();
 	pollSelectMenu.setCustomId('poll-selection');
 	pollSelectMenu.setPlaceholder('Cast your vote...');
@@ -30,7 +29,7 @@ async function createPollHandler(interaction) {
 
 		pollSelectMenu.addOptions({
 			label: optionText,
-			value: i.toString(),
+			value: i.toString()
 		});
 	}
 
@@ -47,7 +46,7 @@ async function createPollHandler(interaction) {
 	const pollImage = await pollUtils.getPollImage(message.id, pollUtils.PollStatus.Initial);
 
 	const attachment = new Discord.AttachmentBuilder(pollImage, {
-		name: 'image.png',
+		name: 'image.png'
 	});
 
 	interaction.editReply({

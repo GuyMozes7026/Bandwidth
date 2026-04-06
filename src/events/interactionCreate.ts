@@ -6,7 +6,7 @@ const selectMenuHandler = require('../handlers/select-menu-handler');
 const modalSubmitHandler = require('../handlers/modal-submit-handler');
 
 /**
- * 
+ *
  * @param {Discord.Interaction} interaction
  */
 async function interactionCreateHander(interaction) {

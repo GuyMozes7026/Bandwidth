@@ -42,7 +42,6 @@ async function messageHandler(interaction) {
 			and to set the default values
 		*/
 
-
 		const messageIdInput = new Discord.TextInputBuilder();
 		messageIdInput.setCustomId('message-id');
 		messageIdInput.setLabel('Message ID (DO NOT CHANGE)');
@@ -111,7 +110,7 @@ const command = new SlashCommandBuilder();
 command.setDefaultMemberPermissions(Discord.PermissionFlagsBits.Administrator);
 command.setName('message');
 command.setDescription('Send and manage Bandwidth messages');
-command.addStringOption(option => {
+command.addStringOption((option) => {
 	option.setName('action');
 	option.setDescription('Action to make');
 	option.setRequired(true);
@@ -124,7 +123,7 @@ command.addStringOption(option => {
 	return option;
 });
 
-command.addStringOption(option => {
+command.addStringOption((option) => {
 	option.setName('message-id');
 	option.setDescription('Message ID');
 	option.setRequired(false);

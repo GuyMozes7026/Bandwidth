@@ -6,7 +6,6 @@ const database = require('../database');
  * @param {Discord.Guild} guild
  */
 async function updateMemberCountChannels(guild) {
-
 	const memberChannelId = await database.getGuildSetting(guild.id, 'stats_members_channel_id');
 	const peopleChannelId = await database.getGuildSetting(guild.id, 'stats_people_channel_id');
 	const botsChannelId = await database.getGuildSetting(guild.id, 'stats_bots_channel_id');
@@ -21,7 +20,7 @@ async function updateMemberCountChannels(guild) {
 	let botsCount = 0;
 
 	// Only loop once
-	members.forEach(member => {
+	members.forEach((member) => {
 		if (member.user.bot) {
 			botsCount += 1;
 		} else {
@@ -29,9 +28,15 @@ async function updateMemberCountChannels(guild) {
 		}
 	});
 
-	if (membersChannel) await membersChannel.setName(`Members - ${membersCount}`);
-	if (peopleChannel) await peopleChannel.setName(`People - ${peopleCount}`);
-	if (botsChannel) await botsChannel.setName(`Bots - ${botsCount}`);
+	if (membersChannel) {
+		await membersChannel.setName(`Members - ${membersCount}`);
+	}
+	if (peopleChannel) {
+		await peopleChannel.setName(`People - ${peopleCount}`);
+	}
+	if (botsChannel) {
+		await botsChannel.setName(`Bots - ${botsCount}`);
+	}
 }
 
 module.exports = {

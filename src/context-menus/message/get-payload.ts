@@ -24,7 +24,7 @@ async function reportUserHandler(interaction) {
 		content: 'Message Payload Attached',
 		files: [
 			new Discord.AttachmentBuilder(Buffer.from(JSON.stringify(messagePayload)), {
-				name:'message-payload.json'
+				name: 'message-payload.json'
 			})
 		],
 		ephemeral: true

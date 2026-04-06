@@ -3,7 +3,6 @@ const { ContextMenuCommandBuilder } = require('@discordjs/builders');
 const { ApplicationCommandType } = require('discord-api-types/v10');
 const pollUtils = require('../../utils/polls');
 
-
 /**
  *
  * @param {Discord.ContextMenuInteraction} interaction

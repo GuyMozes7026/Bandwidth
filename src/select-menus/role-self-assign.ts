@@ -8,12 +8,12 @@ roleSelectMenu.addOptions([
 	{
 		label: '@Updates',
 		description: 'Get pinged whenever important server announcements happen',
-		value: 'updates',
+		value: 'updates'
 	},
 	{
 		label: '@StreamPing',
 		description: 'Get pinged whenever a new Twitch stream is beginning',
-		value: 'streamping',
+		value: 'streamping'
 	}
 ]);
 

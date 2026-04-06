@@ -44,7 +44,7 @@ const command = new SlashCommandBuilder();
 command.setDefaultMemberPermissions(Discord.PermissionFlagsBits.SendMessages);
 command.setName('togglerole');
 command.setDescription('Toggle user roles');
-command.addStringOption(option => {
+command.addStringOption((option) => {
 	option.setName('role');
 	option.setDescription('Role to toggle');
 	option.setRequired(true);
@@ -60,5 +60,5 @@ module.exports = {
 	name: command.name,
 	help: 'Toggle on/off a given user role.\n```\nUsage: /togglerole <role>\n```',
 	handler: toggleroleHandler,
-	deploy: command.toJSON(),
+	deploy: command.toJSON()
 };

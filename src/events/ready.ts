@@ -1,12 +1,11 @@
+const path = require('path');
 const Discord = require('discord.js');
 const glob = require('glob');
-const path = require('path');
 const database = require('../database');
 const pollUtils = require('../utils/polls');
 const { setupGuild } = require('../setup-guild');
 
-
-/**train
+/** train
  *
  * @param {Discord.Client} client
  */

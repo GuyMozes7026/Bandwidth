@@ -10,7 +10,7 @@ expandErrorButton.setStyle(Discord.ButtonStyle.Primary);
  *
  * @param {Discord.ButtonInteraction} interaction
  */
-async function expandErrorHandler(interaction) {    
+async function expandErrorHandler(interaction) {
 	interaction.deferUpdate();
 
 	const { message } = interaction;

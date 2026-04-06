@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
-const database = require('../database');
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const database = require('../database');
 
 const editableOptions = [
 	'admin_role_id',
@@ -48,8 +48,8 @@ async function settingsHandler(interaction) {
 				'```\n' + key + '=' + '\'' + `${value}` + '\'' + '\n```',
 			ephemeral: true,
 			allowedMentions: {
-				parse: [], // * Dont allow tagging anything
-			},
+				parse: [] // * Dont allow tagging anything
+			}
 		});
 		return;
 	}
@@ -62,8 +62,8 @@ async function settingsHandler(interaction) {
 			content: `setting \`${key}\` has been saved successfully`,
 			ephemeral: true,
 			allowedMentions: {
-				parse: [], // dont allow tagging anything
-			},
+				parse: [] // dont allow tagging anything
+			}
 		});
 		return;
 	}
@@ -123,5 +123,5 @@ module.exports = {
 	name: command.name,
 	help: 'Change settings of the bot',
 	handler: settingsHandler,
-	deploy: command.toJSON(),
+	deploy: command.toJSON()
 };

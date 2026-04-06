@@ -147,7 +147,7 @@ async function modApplicationHandler(interaction) {
 		{
 			name: 'What else can you tell us about yourself?',
 			value: extra
-		},
+		}
 	]);
 	modApplicationEmbed.setFooter({
 		text: 'Pretendo Network',
@@ -163,7 +163,7 @@ async function modApplicationHandler(interaction) {
 		components: [row],
 		files: [
 			__dirname + '/../images/pending-icon.png',
-			__dirname + '/../images/pending-banner.png',
+			__dirname + '/../images/pending-banner.png'
 		]
 	});
 

@@ -1,7 +1,7 @@
 const path = require('node:path');
 const Discord = require('discord.js');
-const database = require('../database');
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const database = require('../database');
 
 const HOKAKU_CAFE_DEFAULT_PCAP_NAME_REGEX = /\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.(?:pcapng|pcap)/;
 const HOKAKU_CAFE_BIN_NAME_REGEX = /nexServiceToken-\d{10}-[\dA-f]{8}\.bin/;
@@ -74,9 +74,9 @@ async function uploadNetworkDumpHandler(interaction) {
 	try {
 		await uploadedDumpsChannel.send({
 			content: result.message,
-			files: result.attachments.map((attachment) => ({
+			files: result.attachments.map(attachment => ({
 				attachment: attachment.url,
-				name: attachment.name,
+				name: attachment.name
 			}))
 		});
 	} catch (error) {
@@ -235,11 +235,11 @@ async function proxyHandler(interaction) {
 	const dumpFileExtension = path.extname(dump.name.toLowerCase());
 
 	if (
-		dumpFileExtension !== '.har' &&   // * HTTP Archive dump
-		dumpFileExtension !== '.chls' &&  // * Charles session
+		dumpFileExtension !== '.har' && // * HTTP Archive dump
+		dumpFileExtension !== '.chls' && // * Charles session
 		dumpFileExtension !== '.chlsj' && // * Charles JSON summary
 		dumpFileExtension !== '.chlsx' && // * Charles XML summary
-		dumpFileExtension !== '.saz'      // * Fiddler session
+		dumpFileExtension !== '.saz' // * Fiddler session
 	) {
 		await interaction.editReply({
 			content: `Invalid dump file type. Expected har/chls/chlsj/chlsx/saz, got ${dumpFileExtension}`,
@@ -451,5 +451,5 @@ module.exports = {
 	name: command.name,
 	help: 'Upload network dump for development use',
 	handler: uploadNetworkDumpHandler,
-	deploy: command.toJSON(),
+	deploy: command.toJSON()
 };

@@ -41,5 +41,5 @@ module.exports = {
 	name: command.name,
 	help: 'Toggle on/off Bandwidth\'s automatic help.\n```\nUsage: /toggle-automatic-help\n```',
 	handler: toggleAutomaticHelpHandler,
-	deploy: command.toJSON(),
+	deploy: command.toJSON()
 };
