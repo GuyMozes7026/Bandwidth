@@ -1,17 +1,13 @@
-const path = require('node:path');
-const Discord = require('discord.js');
-const database = require('../database');
+import { extname } from 'node:path';
+import { getGuildSetting } from '@/database';
+import type { Message } from 'discord.js';
 
 const HOKAKU_CAFE_TOKEN_BIN_REGEX = /nexServiceToken-\d*-[A-z0-9]*\.bin/;
 
-/**
- *
- * @param {Discord.Message} message
- */
-async function checkNetworkDumpsUploaded(message) {
-	const developerRoleId = await database.getGuildSetting(message.guild.id, 'developer_role_id');
+export async function checkNetworkDumpsUploaded(message: Message): Promise<void> {
+	const developerRoleId = await getGuildSetting(message.guild!.id, 'developer_role_id');
 
-	if (message.member.roles.cache.has(developerRoleId)) {
+	if (message.member!.roles.cache.has(developerRoleId)) {
 		// * Ignore developer uploads
 		return;
 	}
@@ -22,7 +18,7 @@ async function checkNetworkDumpsUploaded(message) {
 			return attachment;
 		}
 
-		const fileExtension = path.extname(attachment.name.toLowerCase());
+		const fileExtension = extname(attachment.name.toLowerCase());
 
 		if (
 			fileExtension === '.har' || // * HTTP Archive dump
@@ -47,7 +43,3 @@ async function checkNetworkDumpsUploaded(message) {
 
 	await message.delete();
 }
-
-module.exports = {
-	checkNetworkDumpsUploaded
-};

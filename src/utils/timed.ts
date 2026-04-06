@@ -1,14 +1,10 @@
-const Discord = require('discord.js');
-const database = require('../database');
+import { getGuildSetting } from '@/database';
+import type { Guild } from 'discord.js';
 
-/**
- *
- * @param {Discord.Guild} guild
- */
-async function updateMemberCountChannels(guild) {
-	const memberChannelId = await database.getGuildSetting(guild.id, 'stats_members_channel_id');
-	const peopleChannelId = await database.getGuildSetting(guild.id, 'stats_people_channel_id');
-	const botsChannelId = await database.getGuildSetting(guild.id, 'stats_bots_channel_id');
+export async function updateMemberCountChannels(guild: Guild): Promise<void> {
+	const memberChannelId = await getGuildSetting(guild.id, 'stats_members_channel_id');
+	const peopleChannelId = await getGuildSetting(guild.id, 'stats_people_channel_id');
+	const botsChannelId = await getGuildSetting(guild.id, 'stats_bots_channel_id');
 
 	const membersChannel = memberChannelId && await guild.channels.fetch(memberChannelId);
 	const peopleChannel = memberChannelId && await guild.channels.fetch(peopleChannelId);
@@ -38,7 +34,3 @@ async function updateMemberCountChannels(guild) {
 		await botsChannel.setName(`Bots - ${botsCount}`);
 	}
 }
-
-module.exports = {
-	updateMemberCountChannels
-};

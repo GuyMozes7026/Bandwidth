@@ -1,36 +1,32 @@
-const Discord = require('discord.js');
-const errors = require('@pretendonetwork/error-codes');
+import Discord from 'discord.js';
+import errors from '@pretendonetwork/error-codes';
 
 const WIIU_SUPPORT_CODE_REGEX = /(\b1\d{2}-\d{4}\b)/gm;
 const THREE_DS_SUPPORT_CODE_REGEX = /(\b0\d{2}-\d{4}\b)/gm;
 // * There is probably a better way to do this regex
 const PRETENDO_SUPPORT_CODE_REGEX = /(\b678-\d{4}\b|\b598-\d{4}\b|\b727-\d{4}\b)/gm; // * 678 = Martini, 598 = Juxtaposition, 727 = PNID Account
 
-/**
- *
- * @param {String}} message
- */
-function checkForErrorCode(text) {
-	let embed;
-	let error;
+export function checkForErrorCode(text: string): Discord.EmbedBuilder | undefined {
+	let embed: Discord.EmbedBuilder | undefined;
+	let error: string | undefined;
 
 	// * Run this check first to avoid WiiU conflicts
 	if (PRETENDO_SUPPORT_CODE_REGEX.test(text)) {
-		error = text.match(PRETENDO_SUPPORT_CODE_REGEX)[0];
-		embed = getPretendoEmbed(error);
+		error = text.match(PRETENDO_SUPPORT_CODE_REGEX)![0];
+		embed = getPretendoEmbed();
 	}
 
 	if (WIIU_SUPPORT_CODE_REGEX.test(text)) {
-		error = text.match(WIIU_SUPPORT_CODE_REGEX)[0];
-		embed = getWiiUEmbed(error);
+		error = text.match(WIIU_SUPPORT_CODE_REGEX)![0];
+		embed = getWiiUEmbed();
 	}
 
 	if (THREE_DS_SUPPORT_CODE_REGEX.test(text)) {
-		error = text.match(THREE_DS_SUPPORT_CODE_REGEX)[0];
-		embed = get3DSEmbed(error);
+		error = text.match(THREE_DS_SUPPORT_CODE_REGEX)![0];
+		embed = get3DSEmbed();
 	}
 
-	if (embed) {
+	if (embed && error) {
 		const [sysmodule, errorCode] = error.split('-');
 
 		const errorInfo = errors.getErrorInfo(sysmodule, errorCode, 'en_US'); // TODO - Custom locale?
@@ -94,7 +90,7 @@ function checkForErrorCode(text) {
 	return embed;
 }
 
-function getWiiUEmbed() {
+function getWiiUEmbed(): Discord.EmbedBuilder {
 	const embed = new Discord.EmbedBuilder();
 
 	embed.setColor(0x009AC7);
@@ -102,7 +98,7 @@ function getWiiUEmbed() {
 	return embed;
 }
 
-function get3DSEmbed() {
+function get3DSEmbed(): Discord.EmbedBuilder {
 	const embed = new Discord.EmbedBuilder();
 
 	embed.setColor(0xD12228);
@@ -110,14 +106,10 @@ function get3DSEmbed() {
 	return embed;
 }
 
-function getPretendoEmbed() {
+function getPretendoEmbed(): Discord.EmbedBuilder {
 	const embed = new Discord.EmbedBuilder();
 
 	embed.setColor(0x131733);
 
 	return embed;
 }
-
-module.exports = {
-	checkForErrorCode
-};

@@ -12,12 +12,12 @@ import type {
 } from 'discord.js';
 
 export interface PollInfo {
+	pollId: string;
+	channelId: string;
 	title: string;
-	options: unknown[];
+	options: string[];
 	votes: number[];
 	expiryTime: number;
-	pollId?: string;
-	channelId?: string;
 }
 
 export type HandlerFunction<Interaction extends BaseInteraction> = (interaction: Interaction) => Promise<void>;

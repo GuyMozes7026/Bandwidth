@@ -2,10 +2,12 @@ import { EmbedBuilder } from 'discord.js';
 import { initMemberCooldown, getCommandCooldown, updateCommandCooldown } from '@/database';
 import type { CommandHandler } from '@/types/general-types';
 
-async function isInteractionOnCooldown(command: CommandHandler, memberId: number) {
-	if (!command.cooldown) {
-		return false;
-	}
+export async function isInteractionOnCooldown(command: CommandHandler, memberId: number): Promise<false | EmbedBuilder> {
+	// ? This `cooldown` field doesn't seem to exist. Seems like this function should always return false.
+	// ? `command.cooldown` isn't even used later on so this seems like a mistake
+	// if (!command.cooldown) {
+	// 	return false;
+	// }
 
 	// Initialize our cooldown if not already and grab the cooldown
 	await initMemberCooldown(memberId, command.name);
@@ -17,7 +19,7 @@ async function isInteractionOnCooldown(command: CommandHandler, memberId: number
 	}
 
 	const cooldownEmbed = new EmbedBuilder();
-	const relativeTime = getRelativeTime(parseInt(cooldown));
+	const relativeTime = getRelativeTime(cooldown);
 
 	cooldownEmbed.setColor(0xF36F8A);
 	cooldownEmbed.setTitle('Cooldown!');
@@ -28,18 +30,18 @@ async function isInteractionOnCooldown(command: CommandHandler, memberId: number
 	return cooldownEmbed;
 }
 
-/**
- *
- * @param {Discord.CommandInteraction} command
- * @param {Number} memberId
- */
-async function beginCooldown(command, memberId) {
-	const endTime = (new Date(Date.now() + command.cooldown).getTime());
+export async function beginCooldown(command: CommandHandler, memberId: number): Promise<void> {
+	// ? same as above, only here it was used, which would result in endTime always being NaN
+	// const { cooldown } = command;
+
+	const cooldown = await getCommandCooldown(memberId, command.name);
+
+	const endTime = new Date(Date.now() + cooldown).getTime();
 
 	await updateCommandCooldown(memberId, command.name, endTime);
 }
 
-function getRelativeTime(timestamp) {
+export function getRelativeTime(timestamp: number): string {
 	const msPerMinute = 60 * 1000;
 	const msPerHour = msPerMinute * 60;
 	const msPerDay = msPerHour * 24;
@@ -62,9 +64,3 @@ function getRelativeTime(timestamp) {
 		return `in ${Math.round(elapsed / msPerYear)} year(s)`;
 	}
 }
-
-export {
-	isInteractionOnCooldown,
-	beginCooldown,
-	getRelativeTime
-};

@@ -1,18 +1,21 @@
-const Discord = require('discord.js');
-const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
-const database = require('../database');
-const cooldownUtils = require('../utils/cooldown');
+import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
+import { AttachmentBuilder } from 'discord.js';
+import { getAllPollInfo, getPollInfo, closePoll as closePollDb, doesPollExist } from '@/database';
+import { getRelativeTime } from '@/utils/cooldown';
+import type { Client, Message, TextBasedChannel } from 'discord.js';
 
-/**
- * @param {Number} pollId
- * @param {PollStatus} status
- */
-async function getPollImage(pollId, status) {
+export enum PollStatus {
+	Initial,
+	Open,
+	Closed
+}
+
+export async function getPollImage(pollId: string, status: PollStatus): Promise<Buffer<ArrayBufferLike>> {
 	// Poll information
-	const { title, options, votes, expiryTime } = await database.getPollInfo(pollId.toString());
+	const { title, options, votes, expiryTime } = await getPollInfo(pollId);
 	const totalVotes = votes.reduce((partialSum, a) => partialSum + a, 0);
 	const topVotedIndex = votes.reduce((iMax, x, i, arr) => x > arr[iMax] ? i : iMax, 0);
-	const expiryText = expiryTime === 0 ? '' : `Poll expires ${cooldownUtils.getRelativeTime(expiryTime)} - `;
+	const expiryText = expiryTime === 0 ? '' : `Poll expires ${getRelativeTime(expiryTime)} - `;
 
 	// Canvas information
 	const initCanvasHeight = 145;
@@ -62,10 +65,10 @@ async function getPollImage(pollId, status) {
 	ctx.fillStyle = '#fff';
 	ctx.fillText(`${status === PollStatus.Closed ? 'This poll has ended. - ' : expiryText}${totalVotes} votes`, 30, canvas.height - 20);
 
-	for (const option in options) {
-		const margin = 100 * option;
-		const percentage = votes[option] === 0 ? 0 : Math.round((100 * votes[option]) / totalVotes);
-		const isTopVoted = (option == topVotedIndex) && status === PollStatus.Closed;
+	for (let i = 0; i < options.length; i++) {
+		const margin = 100 * i;
+		const percentage = votes[i] === 0 ? 0 : Math.round((100 * votes[i]) / totalVotes);
+		const isTopVoted = (i == topVotedIndex) && status === PollStatus.Closed;
 
 		const rowColor = isTopVoted ? topColor : primaryColor;
 		const pollRing = isTopVoted ? 'poll-ring-top' : 'poll-ring';
@@ -88,7 +91,7 @@ async function getPollImage(pollId, status) {
 		ctx.font = '30px lite';
 		ctx.textAlign = 'left';
 		ctx.fillStyle = rowColor;
-		ctx.fillText(options[option], 55, 160 + margin);
+		ctx.fillText(options[i], 55, 160 + margin);
 
 		// Option vote percentage
 		ctx.font = '22px b';
@@ -100,22 +103,18 @@ async function getPollImage(pollId, status) {
 	return canvas.toBuffer('image/png');
 }
 
-/**
-* @param {Discord.Client} client
-*/
-async function updatePolls(client) {
-	const polls = await database.getAllPollInfo();
-	for (const poll in polls) {
-		const currentPoll = polls[poll];
+export async function updatePolls(client: Client): Promise<void> {
+	const polls = await getAllPollInfo();
+	for (const currentPoll of polls) {
 		const pollStatus = currentPoll.expiryTime != 0 && currentPoll.expiryTime < Date.now() ? PollStatus.Closed : PollStatus.Open;
 
-		const channel = client.channels.cache.get(currentPoll.channelId);
-		let message;
+		const channel = client.channels.cache.get(currentPoll.channelId) as TextBasedChannel;
+		let message: Message;
 
 		try {
 			message = await channel.messages.fetch(currentPoll.pollId);
 		} catch {
-			await database.closePoll(currentPoll.pollId); // Assume the message was nuked or we don't have access anymore, force remove the poll.
+			await closePollDb(currentPoll.pollId); // Assume the message was nuked or we don't have access anymore, force remove the poll.
 			return;
 		}
 
@@ -125,7 +124,7 @@ async function updatePolls(client) {
 		}
 
 		const pollImage = await getPollImage(currentPoll.pollId, PollStatus.Open);
-		const attachment = new Discord.AttachmentBuilder(pollImage, {
+		const attachment = new AttachmentBuilder(pollImage, {
 			name: 'image.png'
 		});
 
@@ -135,13 +134,13 @@ async function updatePolls(client) {
 	}
 }
 
-async function closePoll(message) {
-	if (await database.doesPollExist(message.id) === false) {
+export async function closePoll(message: Message): Promise<void> {
+	if (await doesPollExist(message.id) === false) {
 		return;
 	}
 
 	const pollImage = await getPollImage(message.id, PollStatus.Closed);
-	const attachment = new Discord.AttachmentBuilder(pollImage, {
+	const attachment = new AttachmentBuilder(pollImage, {
 		name: 'image.png'
 	});
 
@@ -150,18 +149,5 @@ async function closePoll(message) {
 		components: []
 	});
 
-	await database.closePoll(message.id);
+	await closePollDb(message.id);
 }
-
-const PollStatus = Object.freeze({
-	Initial: Symbol('init'),
-	Open: Symbol('open'),
-	Closed: Symbol('closed')
-});
-
-module.exports = {
-	getPollImage,
-	updatePolls,
-	closePoll,
-	PollStatus
-};
