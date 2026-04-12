@@ -1,5 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
-import errors from '@pretendonetwork/error-codes';
+import { getErrorInfo } from '@pretendonetwork/error-codes';
 
 const WIIU_SUPPORT_CODE_REGEX = /(\b1\d{2}-\d{4}\b)/gm;
 const THREE_DS_SUPPORT_CODE_REGEX = /(\b0\d{2}-\d{4}\b)/gm;
@@ -29,7 +29,7 @@ export function checkForErrorCode(text: string): EmbedBuilder | undefined {
 	if (embed && error) {
 		const [sysmodule, errorCode] = error.split('-');
 
-		const errorInfo = errors.getErrorInfo(sysmodule, errorCode, 'en_US'); // TODO - Custom locale?
+		const errorInfo = getErrorInfo(sysmodule, errorCode, 'en_US'); // TODO - Custom locale?
 
 		if (!errorInfo) {
 			return;
