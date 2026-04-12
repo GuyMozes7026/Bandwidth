@@ -33,6 +33,7 @@ export interface CommandHandler {
 	help?: string;
 	handler: HandlerFunction<CommandInteraction>;
 	deploy: APIApplicationCommand;
+	cooldown?: number; // ? no command has this but chat-input-command-handler checks for it
 }
 
 export interface ContextMenuHandler {
@@ -46,6 +47,7 @@ export interface ModalHandler {
 	name: string;
 	modal: ModalBuilder;
 	handler: HandlerFunction<ModalSubmitInteraction>;
+	cooldown?: number;
 }
 
 export interface SelectMenuHandler {

@@ -3,11 +3,9 @@ import { initMemberCooldown, getCommandCooldown, updateCommandCooldown } from '@
 import type { BaseHandler } from '@/types/general-types';
 
 export async function isInteractionOnCooldown(interactionHandler: BaseHandler, memberId: string): Promise<false | EmbedBuilder> {
-	// ? This `cooldown` field doesn't seem to exist. Seems like this function should always return false.
-	// ? The value `command.cooldown` isn't even used later on so this seems like a mistake
-	// if (!command.cooldown) {
-	// 	return false;
-	// }
+	if (!('cooldown' in interactionHandler) || !interactionHandler.cooldown) {
+		return false;
+	}
 
 	// Initialize our cooldown if not already and grab the cooldown
 	await initMemberCooldown(memberId, interactionHandler.name);
@@ -31,16 +29,11 @@ export async function isInteractionOnCooldown(interactionHandler: BaseHandler, m
 }
 
 export async function beginCooldown(interactionHandler: BaseHandler, memberId: string): Promise<void> {
-	// ? same as above, only here it was used, which would result in endTime always being NaN
-	// const { cooldown } = command;
-
-	const cooldown = await getCommandCooldown(memberId, interactionHandler.name);
-
-	if (!cooldown) {
+	if (!('cooldown' in interactionHandler) || !interactionHandler.cooldown) {
 		return;
 	}
 
-	const endTime = new Date(Date.now() + cooldown).getTime();
+	const endTime = new Date(Date.now() + interactionHandler.cooldown).getTime();
 
 	await updateCommandCooldown(memberId, interactionHandler.name, endTime);
 }

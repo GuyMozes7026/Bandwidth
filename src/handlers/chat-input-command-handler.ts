@@ -17,8 +17,7 @@ export default async function chatInputCommandHandler(interaction: ChatInputComm
 	const cooldown = await isInteractionOnCooldown(command, memberId);
 	if (!cooldown) {
 		await command.handler(interaction);
-
-		await beginCooldown(command, memberId);
+		beginCooldown(command, memberId);
 	} else {
 		await interaction.reply(
 			{
