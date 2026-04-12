@@ -1,30 +1,30 @@
-const path = require('path');
-const Discord = require('discord.js');
-const glob = require('glob');
-const database = require('../database');
-const pollUtils = require('../utils/polls');
-const { setupGuild } = require('../setup-guild');
+import path from 'path';
+import { sync as globSync } from 'glob';
+import { ActivityType, PresenceUpdateStatus } from 'discord.js';
+import { connect } from '@/database';
+import { updatePolls } from '@/utils/polls';
+import { setupGuild } from '../setup-guild';
+import type { BaseHandler } from '@/types/general-types';
+import type { Client, Collection } from 'discord.js';
 
-/** train
- *
- * @param {Discord.Client} client
- */
-async function readyHandler(client) {
-	await database.connect();
+export default async function readyHandler(client: Client): Promise<void> {
+	await connect();
 
-	loadBotHandlersCollection('buttons', client.buttons);
-	loadBotHandlersCollection('commands', client.commands);
-	loadBotHandlersCollection('context-menus', client.contextMenus);
-	loadBotHandlersCollection('modals', client.modals);
-	loadBotHandlersCollection('select-menus', client.selectMenus);
+	await Promise.all([
+		loadBotHandlersCollection('buttons', client.buttons),
+		loadBotHandlersCollection('commands', client.commands),
+		loadBotHandlersCollection('context-menus', client.contextMenus),
+		loadBotHandlersCollection('modals', client.modals),
+		loadBotHandlersCollection('select-menus', client.selectMenus)
+	]);
 
 	console.log('Registered global commands');
 
 	// setup joined guilds
 	const guilds = await client.guilds.fetch();
 
-	for (const id of guilds.keys()) {
-		const guild = await guilds.get(id).fetch();
+	for (const oauthGuild of guilds.values()) {
+		const guild = await oauthGuild.fetch();
 
 		await setupGuild(guild);
 		console.log(`setup guild: ${guild.name}`);
@@ -32,10 +32,10 @@ async function readyHandler(client) {
 
 	// Start poll refreshing for every minute
 	setInterval(async function () {
-		await pollUtils.updatePolls(client);
+		await updatePolls(client);
 	}, 60000);
 
-	console.log(`Logged in as ${client.user.tag}`);
+	console.log(`Logged in as ${client.user?.tag}`);
 
 	_setRandomStatus(client);
 
@@ -45,24 +45,47 @@ async function readyHandler(client) {
 	}, 10 * 60 * 1000);
 }
 
-async function _setRandomStatus(client) {
-	const statuses = ['eating network cables 😋', 'becoming marketable', 'my aunt works at nintendo!', 'amazing looking water in this game', 'lgtm', 'who needs PRs, commit to main', 'join 🇨🇭 Tester+ today! real!', 'y can\'t metroid crawl :(', 'i wish squids were real', 'trans rights btw', 'no eta', 'soon™', 'soon™™™™™', 'rules in #rules, the rules channel', '🤔 did you know we have a Forum', '🤯 did you know we have a Discord', 'developer? i hardly know \'er!', 'kills you with hammers', 'purple for an amazing reason', 'works on my machine', 'furry = dev', 'you did, in fact, use cheats', 'ay lmao', 'do not open Homebrew Community', '😳 /mod-application', 'jom :3 is typing', '2038-01-19T03:14:08.000Z', '160-0103 w/ a side of Hynix chips'];
-	client?.user?.setPresence({ activities: [{ name: statuses[Math.floor(Math.random() * statuses.length)], type: Discord.ActivityType.Custom }], status: Discord.PresenceUpdateStatus.Online });
+const statuses = [
+	'eating network cables 😋',
+	'becoming marketable',
+	'my aunt works at nintendo!',
+	'amazing looking water in this game',
+	'lgtm',
+	'who needs PRs, commit to main',
+	'join 🇨🇭 Tester+ today! real!',
+	'y can\'t metroid crawl :(',
+	'i wish squids were real',
+	'trans rights btw',
+	'no eta',
+	'soon™',
+	'soon™™™™™',
+	'rules in #rules, the rules channel',
+	'🤔 did you know we have a Forum',
+	'🤯 did you know we have a Discord',
+	'developer? i hardly know \'er!',
+	'kills you with hammers',
+	'purple for an amazing reason',
+	'works on my machine',
+	'furry = dev',
+	'you did, in fact, use cheats',
+	'ay lmao',
+	'do not open Homebrew Community',
+	'😳 /mod-application',
+	'jom :3 is typing',
+	'2038-01-19T03:14:08.000Z',
+	'160-0103 w/ a side of Hynix chips'
+];
+
+async function _setRandomStatus(client: Client): Promise<void> {
+	client?.user?.setPresence({ activities: [{ name: statuses[Math.floor(Math.random() * statuses.length)], type: ActivityType.Custom }], status: PresenceUpdateStatus.Online });
 }
 
-/**
- *
- * @param {String} name
- * @param {Discord.Collection} collection
- */
-function loadBotHandlersCollection(name, collection) {
-	const files = glob.sync(`${__dirname}/../${name}/**/*.js`);
+async function loadBotHandlersCollection(name: string, collection: Collection<string, BaseHandler>): Promise<void> {
+	const files = globSync(`${__dirname}/../${name}/**/*.[jt]s`);
 
 	for (const file of files) {
-		const handler = require(path.resolve(file));
+		const handler = await import(path.resolve(file)) as BaseHandler;
 
 		collection.set(handler.name, handler);
 	}
 }
-
-module.exports = readyHandler;

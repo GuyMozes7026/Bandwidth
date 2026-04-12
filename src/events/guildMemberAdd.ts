@@ -1,19 +1,16 @@
-const Discord = require('discord.js');
-const database = require('../database');
+import { EmbedBuilder } from 'discord.js';
+import { getGuildSetting } from '@/database';
+import type { GuildMember } from 'discord.js';
 
-/**
- *
- * @param {Discord.GuildMember} member
- */
-async function guildMemberAddHandler(member) {
+export default async function guildMemberAddHandler(member: GuildMember): Promise<void> {
 	const guild = member.guild;
 
-	const readmeChannelId = await database.getGuildSetting(member.guild.id, 'readme_channel_id');
-	const rulesChannelId = await database.getGuildSetting(member.guild.id, 'rules_channel_id');
+	const readmeChannelId = await getGuildSetting(member.guild.id, 'readme_channel_id');
+	const rulesChannelId = await getGuildSetting(member.guild.id, 'rules_channel_id');
 	const readmeChannel = readmeChannelId && await guild.channels.fetch(readmeChannelId);
 	const rulesChannel = rulesChannelId && await guild.channels.fetch(rulesChannelId);
 
-	const welcomeEmbed = new Discord.EmbedBuilder();
+	const welcomeEmbed = new EmbedBuilder();
 
 	welcomeEmbed.setColor(0x1B1F3B);
 	welcomeEmbed.setTitle('Welcome to Pretendo Network :tada:');
@@ -29,17 +26,16 @@ async function guildMemberAddHandler(member) {
 	welcomeEmbed.setThumbnail('https://i.imgur.com/8clyKqx.png');
 	welcomeEmbed.setImage('https://i.imgur.com/CF7qgW1.png');
 
-	// caught because user could have dm's disabled
 	try {
 		await member.send({
 			embeds: [welcomeEmbed]
 		});
-	} catch {}
+	} catch {
+		// caught because user could have dm's disabled
+	}
 
-	if (await database.getGuildSetting(member.guild.id, 'unverified_role_id') !== undefined) {
-		const role = guild.roles.cache.get(await database.getGuildSetting(member.guild.id, 'unverified_role_id'));
-		member.roles.add(role);
+	if (await getGuildSetting(member.guild.id, 'unverified_role_id') !== undefined) {
+		const role = guild.roles.cache.get(await getGuildSetting(member.guild.id, 'unverified_role_id'));
+		member.roles.add(role!);
 	}
 }
-
-module.exports = guildMemberAddHandler;

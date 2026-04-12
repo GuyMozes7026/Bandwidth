@@ -1,15 +1,12 @@
-const Discord = require('discord.js');
-const buttonHandler = require('../handlers/button-handler');
-const chatInputCommandHandler = require('../handlers/chat-input-command-handler');
-const contextMenuHandler = require('../handlers/context-menu-handler');
-const selectMenuHandler = require('../handlers/select-menu-handler');
-const modalSubmitHandler = require('../handlers/modal-submit-handler');
+import { MessageFlags } from 'discord.js';
+import buttonHandler from '@/handlers/button-handler';
+import chatInputCommandHandler from '../handlers/chat-input-command-handler';
+import contextMenuHandler from '../handlers/context-menu-handler';
+import selectMenuHandler from '../handlers/select-menu-handler';
+import modalSubmitHandler from '../handlers/modal-submit-handler';
+import type { Interaction } from 'discord.js';
 
-/**
- *
- * @param {Discord.Interaction} interaction
- */
-async function interactionCreateHander(interaction) {
+export default async function interactionCreateHandler(interaction: Interaction): Promise<void> {
 	try {
 		if (interaction.isChatInputCommand()) {
 			await chatInputCommandHandler(interaction);
@@ -31,16 +28,15 @@ async function interactionCreateHander(interaction) {
 			await modalSubmitHandler(interaction);
 		}
 	} catch (error) {
-		const payload = {
-			content: error.message || 'Missing error message',
-			ephemeral: true
-		};
+		const content = error instanceof Error ? error.message : 'Missing error message';
 
 		try {
-			if (interaction.replied || interaction.deferred) {
-				await interaction.editReply(payload);
-			} else {
-				await interaction.reply(payload);
+			if (!interaction.isAutocomplete()) {
+				if (interaction.replied || interaction.deferred) {
+					await interaction.editReply({ content });
+				} else {
+					await interaction.reply({ content, flags: MessageFlags.Ephemeral });
+				}
 			}
 			console.log(error);
 		} catch (replyError) {
@@ -48,5 +44,3 @@ async function interactionCreateHander(interaction) {
 		}
 	}
 }
-
-module.exports = interactionCreateHander;

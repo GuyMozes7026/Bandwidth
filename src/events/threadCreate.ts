@@ -1,17 +1,16 @@
-const timers = require('node:timers/promises');
-const Discord = require('discord.js');
-const { button: expandErrorButton } = require('../buttons/expand-error');
-const errorCodeUtils = require('../utils/errorCode');
-const database = require('../database');
+import timers from 'node:timers/promises';
+import { ChannelType, ActionRowBuilder, EmbedBuilder } from 'discord.js';
+import { checkAutomaticHelpDisabled } from '@/database';
+import expandErrorButtonHandler from '../buttons/expand-error';
+import { checkForErrorCode } from '../utils/errorCode';
+import type { ButtonBuilder, ThreadChannel } from 'discord.js';
 
-/**
- *
- * @param {Discord.ThreadChannel} threadChannel
- */
-async function threadCreateHandler(threadChannel) {
+const expandErrorButton = expandErrorButtonHandler.button;
+
+export default async function threadCreateHandler(threadChannel: ThreadChannel): Promise<void> {
 	if (
-		threadChannel.type !== Discord.ChannelType.GuildPublicThread ||
-		threadChannel.parent.type !== Discord.ChannelType.GuildForum
+		threadChannel.type !== ChannelType.PublicThread ||
+		threadChannel.parent?.type !== ChannelType.GuildForum
 	) {
 		return;
 	}
@@ -28,7 +27,7 @@ async function threadCreateHandler(threadChannel) {
 	}
 
 	// * Check if automatic help is disabled
-	const isHelpDisabled = await database.checkAutomaticHelpDisabled(threadChannel.guildId, threadChannel.ownerId);
+	const isHelpDisabled = await checkAutomaticHelpDisabled(threadChannel.guildId, threadChannel.ownerId);
 
 	if (isHelpDisabled) {
 		// * Bail if automatic help is disabled
@@ -38,22 +37,18 @@ async function threadCreateHandler(threadChannel) {
 	await tryAutomaticHelp(threadChannel);
 }
 
-/**
- *
- * @param {Discord.ThreadChannel} threadChannel
- */
-async function tryAutomaticHelp(threadChannel) {
-	const errorCodeEmbed = errorCodeUtils.checkForErrorCode(threadChannel.name);
-	const row = new Discord.ActionRowBuilder();
+async function tryAutomaticHelp(threadChannel: ThreadChannel): Promise<void> {
+	const errorCodeEmbed = checkForErrorCode(threadChannel.name);
+	const row = new ActionRowBuilder<ButtonBuilder>();
 
 	if (errorCodeEmbed) {
 		await threadChannel.messages.fetch();
 
 		row.addComponents(expandErrorButton);
 
-		const embed = new Discord.EmbedBuilder();
-		embed.setColor(errorCodeEmbed.data.color);
-		embed.setTitle(errorCodeEmbed.data.title);
+		const embed = new EmbedBuilder();
+		embed.setColor(errorCodeEmbed.data.color!);
+		embed.setTitle(errorCodeEmbed.data.title!);
 		embed.setDescription('Support code detected, press to expand information');
 
 		await threadChannel.send({
@@ -62,5 +57,3 @@ async function tryAutomaticHelp(threadChannel) {
 		});
 	}
 }
-
-module.exports = threadCreateHandler;
