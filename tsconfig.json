@@ -10,6 +10,7 @@
 		"allowJs": true,
 		"target": "es2022",
 		"noEmitOnError": true,
+		"ignoreDeprecations": "6.0",
 		"paths": {
 			"@/*": ["./*"]
 		}
