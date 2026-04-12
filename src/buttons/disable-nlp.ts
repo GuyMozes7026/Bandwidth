@@ -1,41 +1,39 @@
-const Discord = require('discord.js');
-const database = require('../database');
+import { ButtonBuilder, ButtonStyle } from 'discord.js';
+import { checkAutomaticHelpDisabled, disableAutomaticHelp } from '@/database';
+import type { ButtonHandler } from '@/types/general-types';
+import type { APIButtonComponentWithCustomId, ButtonInteraction, GuildMember } from 'discord.js';
 
-const disableNLPButton = new Discord.ButtonBuilder();
+const disableNLPButton = new ButtonBuilder();
 disableNLPButton.setCustomId('disable-nlp');
 disableNLPButton.setLabel('Disable Automatic Help');
-disableNLPButton.setStyle(Discord.ButtonStyle.Danger);
+disableNLPButton.setStyle(ButtonStyle.Danger);
 
-/**
- *
- * @param {Discord.ButtonInteraction} interaction
- */
-async function disableNLPHandler(interaction) {
+async function disableNLPHandler(interaction: ButtonInteraction): Promise<void> {
 	await interaction.deferReply({
 		ephemeral: true
 	});
 
-	const { guildId } = interaction;
-	const memberId = interaction.member.id;
+	const guildId = interaction.guildId!;
+	const memberId = (interaction.member as GuildMember).id;
 
-	const isHelpDisabled = await database.checkAutomaticHelpDisabled(guildId, memberId);
+	const isHelpDisabled = await checkAutomaticHelpDisabled(guildId, memberId);
 
 	if (isHelpDisabled) {
 		await interaction.editReply({
-			content: 'Automatic help is already disabled for your account.\nTo enable automatic help, use the `/toggle-automatic-help` command',
-			ephemeral: true
+			content: 'Automatic help is already disabled for your account.\nTo enable automatic help, use the `/toggle-automatic-help` command'
 		});
 	} else {
-		await database.disableAutomaticHelp(guildId, memberId);
+		await disableAutomaticHelp(guildId, memberId);
 		await interaction.editReply({
-			content: 'Automatic help has been _**disabled**_ for your account.\nTo enable automatic help, use the `/toggle-automatic-help` command',
-			ephemeral: true
+			content: 'Automatic help has been _**disabled**_ for your account.\nTo enable automatic help, use the `/toggle-automatic-help` command'
 		});
 	}
 }
 
-module.exports = {
-	name: disableNLPButton.data.custom_id,
+const handler: ButtonHandler = {
+	name: (disableNLPButton.data as APIButtonComponentWithCustomId).custom_id,
 	button: disableNLPButton,
 	handler: disableNLPHandler
 };
+
+export default handler;

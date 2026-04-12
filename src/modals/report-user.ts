@@ -1,62 +1,58 @@
-const Discord = require('discord.js');
-const discordTranscripts = require('discord-html-transcripts');
-const database = require('../database');
+import discordTranscripts from 'discord-html-transcripts';
+import { TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
+import { getGuildSetting } from '@/database';
+import type { ModalHandler } from '@/types/general-types';
+import type { GuildChannel, GuildMember, ModalSubmitInteraction, SendableChannels } from 'discord.js';
 
-const reason = new Discord.TextInputBuilder();
+const reason = new TextInputBuilder();
 reason.setCustomId('reason');
 reason.setLabel('Reason');
-reason.setStyle(Discord.TextInputStyle.Paragraph);
+reason.setStyle(TextInputStyle.Paragraph);
 reason.setRequired(true);
 
-const transcriptCount = new Discord.TextInputBuilder();
+const transcriptCount = new TextInputBuilder();
 transcriptCount.setCustomId('transcript-count');
 transcriptCount.setLabel('Transcript');
-transcriptCount.setStyle(Discord.TextInputStyle.Short);
+transcriptCount.setStyle(TextInputStyle.Short);
 transcriptCount.setPlaceholder('Number of messages to include. 0-100. Default 20');
 
-const actionRow1 = new Discord.ActionRowBuilder();
+const actionRow1 = new ActionRowBuilder<TextInputBuilder>();
 actionRow1.addComponents(reason);
 
-const actionRow2 = new Discord.ActionRowBuilder();
+const actionRow2 = new ActionRowBuilder<TextInputBuilder>();
 actionRow2.addComponents(transcriptCount);
 
-const reportUserModal = new Discord.ModalBuilder();
+const reportUserModal = new ModalBuilder();
 reportUserModal.setCustomId('report-user');
 reportUserModal.setTitle('Reporting User');
 reportUserModal.addComponents(actionRow1, actionRow2);
 
-/**
- *
- * @param {Discord.ModalSubmitInteraction} interaction
- */
-async function reportUserHandler(interaction) {
+async function reportUserHandler(interaction: ModalSubmitInteraction): Promise<void> {
 	await interaction.deferReply({
-		content: 'Thinking...',
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 
 	const parts = interaction.customId.split('-');
 	const targetId = parts[2];
-	const targetMember = await interaction.guild.members.fetch(targetId);
+	const targetMember = await interaction.guild!.members.fetch(targetId);
 
 	const reason = interaction.fields.getTextInputValue('reason').trim();
-	let transcriptCount = interaction.fields.getTextInputValue('transcript-count')?.trim();
+	let transcriptCount = parseInt(interaction.fields.getTextInputValue('transcript-count')?.trim());
 
-	if (transcriptCount === '' || isNaN(transcriptCount)) {
+	if (isNaN(transcriptCount)) {
 		transcriptCount = 20;
-	} else {
-		transcriptCount = parseInt(transcriptCount);
 	}
 
-	const reportsChannelId = await database.getGuildSetting(interaction.guildId, 'reports_channel_id');
-	const channels = await interaction.guild.channels.fetch();
-	const reportsChannel = channels.find(channel => channel.id === reportsChannelId);
+	const reportsChannelId = await getGuildSetting(interaction.guildId!, 'reports_channel_id');
+	const channels = await interaction.guild!.channels.fetch();
+	const reportsChannel = channels.find(channel => channel!.id === reportsChannelId);
 
 	if (!reportsChannel) {
 		throw new Error('Report failed to submit - channel not setup');
 	}
 
-	const reportEmbed = new Discord.EmbedBuilder();
+	const reportEmbed = new EmbedBuilder();
+	const reportingMember = interaction.member as GuildMember;
 
 	reportEmbed.setColor(0xF36F8A);
 	reportEmbed.setTitle('User Report');
@@ -69,12 +65,12 @@ async function reportUserHandler(interaction) {
 		},
 		{
 			name: 'Reporting User',
-			value: `<@${interaction.member.id}>\n${interaction.member.id}`,
+			value: `<@${reportingMember.id}>\n${reportingMember.id}`,
 			inline: true
 		},
 		{
 			name: 'Channel',
-			value: `<#${interaction.channelId}>\n${interaction.channel.name}`,
+			value: `<#${interaction.channelId}>\n${(interaction.channel as GuildChannel).name}`,
 			inline: true
 		},
 		{
@@ -84,28 +80,28 @@ async function reportUserHandler(interaction) {
 	);
 	reportEmbed.setFooter({
 		text: 'Pretendo Network',
-		iconURL: interaction.guild.iconURL()
+		iconURL: interaction.guild!.iconURL() ?? undefined
 	});
 	reportEmbed.setTimestamp(Date.now());
 
-	const transcript = await discordTranscripts.createTranscript(interaction.channel, {
+	const transcript = await discordTranscripts.createTranscript(interaction.channel!, {
 		limit: transcriptCount,
 		poweredBy: false
 	});
 
-	const message = await reportsChannel.send({
+	const message = await (reportsChannel as SendableChannels).send({
 		embeds: [reportEmbed],
 		files: [transcript]
 	});
 
-	const transcriptButton = new Discord.ButtonBuilder();
+	const transcriptButton = new ButtonBuilder();
 
 	transcriptButton.setLabel('Download Transcript');
-	transcriptButton.setStyle(Discord.ButtonStyle.Link);
+	transcriptButton.setStyle(ButtonStyle.Link);
 	transcriptButton.setEmoji('📜');
-	transcriptButton.setURL(message.attachments.first().url);
+	transcriptButton.setURL(message.attachments.first()!.url);
 
-	const row = new Discord.ActionRowBuilder();
+	const row = new ActionRowBuilder<ButtonBuilder>();
 	row.addComponents(transcriptButton);
 
 	await message.edit({
@@ -114,13 +110,14 @@ async function reportUserHandler(interaction) {
 	});
 
 	await interaction.editReply({
-		content: 'Report Submitted',
-		ephemeral: true
+		content: 'Report Submitted'
 	});
 }
 
-module.exports = {
-	name: reportUserModal.data.custom_id,
+const handler: ModalHandler = {
+	name: reportUserModal.data.custom_id!,
 	modal: reportUserModal,
 	handler: reportUserHandler
 };
+
+export default handler;

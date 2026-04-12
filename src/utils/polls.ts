@@ -128,7 +128,7 @@ export async function updatePolls(client: Client): Promise<void> {
 			name: 'image.png'
 		});
 
-		message.edit({
+		await message.edit({
 			files: [attachment]
 		});
 	}
@@ -144,7 +144,7 @@ export async function closePoll(message: Message): Promise<void> {
 		name: 'image.png'
 	});
 
-	message.edit({
+	await message.edit({
 		files: [attachment],
 		components: []
 	});

@@ -1,66 +1,66 @@
-const Discord = require('discord.js');
-const database = require('../database');
+import { ActionRowBuilder, ButtonBuilder, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { getGuildSetting } from '@/database';
+import type { ModalHandler } from '@/types/general-types';
+import type { GuildMemberRoleManager, ModalSubmitInteraction, ActionRow, ButtonComponent } from 'discord.js';
 
-const reason = new Discord.TextInputBuilder();
+const reason = new TextInputBuilder();
 reason.setCustomId('reason');
 reason.setLabel('Reason for denying moderator application.');
-reason.setStyle(Discord.TextInputStyle.Paragraph);
+reason.setStyle(TextInputStyle.Paragraph);
 reason.setPlaceholder('Enter a reason for denying...');
 reason.setRequired(false);
 
-const actionRow = new Discord.ActionRowBuilder();
+const actionRow = new ActionRowBuilder<TextInputBuilder>();
 actionRow.addComponents(reason);
 
-const denyModApplicationModal = new Discord.ModalBuilder();
+const denyModApplicationModal = new ModalBuilder();
 denyModApplicationModal.setCustomId('deny-moderator-application');
 denyModApplicationModal.setTitle('Deny moderator application');
 denyModApplicationModal.addComponents(actionRow);
 
-/**
- *
- * @param {Discord.ModalSubmitInteraction} interaction
- */
-async function denyModApplicationHandler(interaction) {
+async function denyModApplicationHandler(interaction: ModalSubmitInteraction): Promise<void> {
 	await interaction.deferReply({
 		ephemeral: true
 	});
 
-	const adminRoleId = await database.getGuildSetting(interaction.guildId, 'admin_role_id');
+	const adminRoleId = await getGuildSetting(interaction.guildId!, 'admin_role_id');
 	if (!adminRoleId) {
 		throw new Error('No admin role ID set!');
 	}
 
-	const headModRoleId = await database.getGuildSetting(interaction.guildId, 'head_mod_role_id');
+	const headModRoleId = await getGuildSetting(interaction.guildId!, 'head_mod_role_id');
 	if (!headModRoleId) {
 		throw new Error('No head mod role ID set!');
 	}
 
-	const hasAdminRole = interaction.member.roles.cache.get(adminRoleId);
-	const hasHeadModRole = interaction.member.roles.cache.get(headModRoleId);
+	const rolesCache = (interaction.member!.roles as GuildMemberRoleManager).cache;
+
+	const hasAdminRole = rolesCache.get(adminRoleId);
+	const hasHeadModRole = rolesCache.get(headModRoleId);
 
 	if (!(hasAdminRole || hasHeadModRole)) {
 		throw new Error('Only administrators and head mods have permission to accept/deny applications');
 	}
 
-	const { message } = interaction;
-	const modApplicationEmbed = new Discord.EmbedBuilder(message.embeds[0].toJSON());
-	const rowOld = message.components[0];
+	const message = interaction.message!;
+	const modApplicationEmbed = new EmbedBuilder(message.embeds[0].toJSON());
+	const rowOld = message.components[0] as ActionRow<ButtonComponent>;
 	const [acceptButtonOld, denyButtonOld] = rowOld.components;
 
 	modApplicationEmbed.setColor(0xF36F8A);
 	modApplicationEmbed.setImage('attachment://denied-banner.png');
 	modApplicationEmbed.setThumbnail('attachment://denied-icon.png');
 
-	const acceptButtonNew = new Discord.ButtonBuilder(acceptButtonOld.toJSON());
-	const denyButtonNew = new Discord.ButtonBuilder(denyButtonOld.toJSON());
+	const acceptButtonNew = new ButtonBuilder(acceptButtonOld.toJSON());
+	const denyButtonNew = new ButtonBuilder(denyButtonOld.toJSON());
 
 	acceptButtonNew.setDisabled();
 	denyButtonNew.setDisabled();
 
-	const row = new Discord.ActionRowBuilder();
+	const row = new ActionRowBuilder<ButtonBuilder>();
 	row.addComponents(acceptButtonNew, denyButtonNew);
 
-	const deniedApplicationEmbed = new Discord.EmbedBuilder();
+	const deniedApplicationEmbed = new EmbedBuilder();
 	deniedApplicationEmbed.setColor(0xF36F8A);
 	deniedApplicationEmbed.setTitle('Mod Application Denied');
 	deniedApplicationEmbed.setDescription('Your moderator application has been denied.');
@@ -69,7 +69,7 @@ async function denyModApplicationHandler(interaction) {
 		value: interaction.fields.getTextInputValue('reason') || 'No reason given.'
 	}]);
 
-	const applyingMember = await interaction.guild.members.fetch(modApplicationEmbed.data.description.match(/[0-9]+/)[0]);
+	const applyingMember = await interaction.guild!.members.fetch(modApplicationEmbed.data.description!.match(/[0-9]+/)![0]);
 	applyingMember.send({
 		embeds: [deniedApplicationEmbed]
 	}).catch(() => {});
@@ -84,13 +84,14 @@ async function denyModApplicationHandler(interaction) {
 	});
 
 	await interaction.editReply({
-		content: 'Denied mod application',
-		ephemeral: true
+		content: 'Denied mod application'
 	});
 }
 
-module.exports = {
-	name: denyModApplicationModal.data.custom_id,
+const handler: ModalHandler = {
+	name: denyModApplicationModal.data.custom_id!,
 	modal: denyModApplicationModal,
 	handler: denyModApplicationHandler
 };
+
+export default handler;

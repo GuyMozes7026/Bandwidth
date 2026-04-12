@@ -1,31 +1,30 @@
-const Discord = require('discord.js');
-const database = require('../database');
-const { button: verifyCompleteButton } = require('./verify-complete');
+import { ButtonBuilder, ButtonStyle, ActionRowBuilder, EmbedBuilder } from 'discord.js';
+import { getAllRules } from '@/database';
+import verifyCompleteButtonHandler from './verify-complete';
+import type { ButtonHandler } from '@/types/general-types';
+import type { APIButtonComponentWithCustomId, ButtonInteraction } from 'discord.js';
 
-const viewRulesButton = new Discord.ButtonBuilder();
+const verifyCompleteButton = verifyCompleteButtonHandler.button;
+const viewRulesButton = new ButtonBuilder();
 viewRulesButton.setCustomId('view-rules');
 viewRulesButton.setLabel('View Rules');
-viewRulesButton.setStyle(Discord.ButtonStyle.Primary);
+viewRulesButton.setStyle(ButtonStyle.Primary);
 
-/**
- *
- * @param {Discord.ButtonInteraction} interaction
- */
-async function viewRulesHandler(interaction) {
+async function viewRulesHandler(interaction: ButtonInteraction): Promise<void> {
 	const parts = interaction.customId.split('-');
 	const ruleId = Number(parts[2]) || 0;
 
-	const rules = await database.getAllRules(interaction.guildId);
+	const rules = await getAllRules(interaction.guildId!);
 	const rule = rules[ruleId];
 
-	const nextButton = new Discord.ButtonBuilder();
+	const nextButton = new ButtonBuilder();
 	nextButton.setCustomId(`view-rules-${ruleId + 1}`);
 	nextButton.setLabel('Next');
-	nextButton.setStyle('Primary');
+	nextButton.setStyle(ButtonStyle.Primary);
 	nextButton.setEmoji('⏩');
 	nextButton.setDisabled(false);
 
-	const row = new Discord.ActionRowBuilder();
+	const row = new ActionRowBuilder<ButtonBuilder>();
 	row.addComponents(nextButton);
 
 	if (rules.length === 0) {
@@ -38,7 +37,7 @@ async function viewRulesHandler(interaction) {
 		return;
 	}
 
-	const ruleEmbed = new Discord.EmbedBuilder();
+	const ruleEmbed = new EmbedBuilder();
 	ruleEmbed.setColor(0x9D6FF3);
 	ruleEmbed.setTitle(`Rule ${ruleId + 1}: ${rule.title}`);
 	ruleEmbed.setDescription(rule.description);
@@ -52,16 +51,15 @@ async function viewRulesHandler(interaction) {
 	} else {
 		await interaction.update({
 			embeds: [ruleEmbed],
-			components: [row],
-			ephemeral: true
+			components: [row]
 		});
 	}
 
-	let time = rule.time;
+	let time = Number(rule.time);
 	if (time !== 0) {
-		const timer = setInterval((function countdown() {
+		function countdown(): void {
 			nextButton.setLabel(time === 0 ? 'Next' : `Next (${time})`);
-			nextButton.setDisabled(time === 0 ? false : true);
+			nextButton.setDisabled(time !== 0);
 			time -= 1;
 
 			row.setComponents(nextButton);
@@ -75,8 +73,11 @@ async function viewRulesHandler(interaction) {
 			}
 
 			interaction.editReply({ components: [row] });
-			return countdown;
-		}()), 1000);
+		}
+
+		// * call once immediately then once every second
+		countdown();
+		const timer = setInterval(countdown, 1000);
 	} else {
 		if (rules[ruleId + 1] === undefined) {
 			row.setComponents(verifyCompleteButton);
@@ -85,8 +86,10 @@ async function viewRulesHandler(interaction) {
 	}
 }
 
-module.exports = {
-	name: viewRulesButton.data.custom_id,
+const handler: ButtonHandler = {
+	name: (viewRulesButton.data as APIButtonComponentWithCustomId).custom_id,
 	button: viewRulesButton,
 	handler: viewRulesHandler
 };
+
+export default handler;

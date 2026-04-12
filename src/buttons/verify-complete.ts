@@ -1,28 +1,28 @@
-const Discord = require('discord.js');
-const database = require('../database');
+import { ButtonBuilder, ButtonStyle } from 'discord.js';
+import { getGuildSetting } from '@/database';
+import type { ButtonHandler } from '@/types/general-types';
+import type { APIButtonComponentWithCustomId, ButtonInteraction, GuildMember } from 'discord.js';
 
-const verifyCompleteButton = new Discord.ButtonBuilder();
+const verifyCompleteButton = new ButtonBuilder();
 verifyCompleteButton.setCustomId('verify-complete');
 verifyCompleteButton.setLabel('Verify');
-verifyCompleteButton.setStyle(Discord.ButtonStyle.Success);
+verifyCompleteButton.setStyle(ButtonStyle.Success);
 
-/**
- *
- * @param {Discord.ButtonInteraction} interaction
- */
-async function verifyCompleteHandler(interaction) {
+async function verifyCompleteHandler(interaction: ButtonInteraction): Promise<void> {
 	interaction.deferUpdate();
 
 	try {
-		const role = interaction.guild.roles.cache.get(await database.getGuildSetting(interaction.guildId, 'unverified_role_id'));
-		interaction.member.roles.remove(role);
+		const role = interaction.guild!.roles.cache.get(await getGuildSetting(interaction.guildId!, 'unverified_role_id'))!;
+		(interaction.member as GuildMember).roles.remove(role);
 	} catch {
 		// Do nothing, role is already removed
 	}
 }
 
-module.exports = {
-	name: verifyCompleteButton.data.custom_id,
+const handler: ButtonHandler = {
+	name: (verifyCompleteButton.data as APIButtonComponentWithCustomId).custom_id,
 	button: verifyCompleteButton,
 	handler: verifyCompleteHandler
 };
+
+export default handler;

@@ -1,50 +1,47 @@
-const Discord = require('discord.js');
+import { TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
+import type { ModalHandler } from '@/types/general-types';
+import type { ModalSubmitInteraction } from 'discord.js';
 
-const titleTextInput = new Discord.TextInputBuilder();
+const titleTextInput = new TextInputBuilder();
 titleTextInput.setCustomId('title');
 titleTextInput.setLabel('Title');
-titleTextInput.setStyle(Discord.TextInputStyle.Short);
+titleTextInput.setStyle(TextInputStyle.Short);
 titleTextInput.setPlaceholder('Title of the rule');
 titleTextInput.setRequired(true);
 titleTextInput.setMaxLength(50);
 
-const descriptionTextInput = new Discord.TextInputBuilder();
+const descriptionTextInput = new TextInputBuilder();
 descriptionTextInput.setCustomId('description');
-descriptionTextInput.setStyle(Discord.TextInputStyle.Paragraph);
+descriptionTextInput.setStyle(TextInputStyle.Paragraph);
 descriptionTextInput.setLabel('Rule Description');
 descriptionTextInput.setPlaceholder('Description of the rule');
 descriptionTextInput.setRequired(true);
 
-const timeTextInput = new Discord.TextInputBuilder();
+const timeTextInput = new TextInputBuilder();
 timeTextInput.setCustomId('time');
 timeTextInput.setLabel('Rule time');
-timeTextInput.setStyle(Discord.TextInputStyle.Short);
+timeTextInput.setStyle(TextInputStyle.Short);
 timeTextInput.setPlaceholder('Time in seconds the user has to wait to continue');
 timeTextInput.setRequired(true);
 timeTextInput.setMaxLength(2);
 
-const actionRow1 = new Discord.ActionRowBuilder();
+const actionRow1 = new ActionRowBuilder<TextInputBuilder>();
 actionRow1.addComponents(titleTextInput);
 
-const actionRow2 = new Discord.ActionRowBuilder();
+const actionRow2 = new ActionRowBuilder<TextInputBuilder>();
 actionRow2.addComponents(descriptionTextInput);
 
-const actionRow3 = new Discord.ActionRowBuilder();
+const actionRow3 = new ActionRowBuilder<TextInputBuilder>();
 actionRow3.addComponents(timeTextInput);
 
-const updateRuleModal = new Discord.ModalBuilder();
+const updateRuleModal = new ModalBuilder();
 updateRuleModal.setCustomId('update-rule');
 updateRuleModal.setTitle('Create Rule');
 updateRuleModal.addComponents(actionRow1, actionRow2, actionRow3);
 
-/**
- *
- * @param {Discord.ModalSubmitInteraction} interaction
- */
-async function updateRuleHandler(interaction) {
+async function updateRuleHandler(interaction: ModalSubmitInteraction): Promise<void> {
 	await interaction.deferReply({
-		content: 'Thinking...',
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 
 	const id = interaction.customId.split('-')[2] || 0;
@@ -55,13 +52,12 @@ async function updateRuleHandler(interaction) {
 
 	if (time < 0 || isNaN(time)) {
 		await interaction.editReply({
-			content: 'Oops! That isn\'t a valid time number.',
-			ephemeral: true
+			content: 'Oops! That isn\'t a valid time number.'
 		});
 		return;
 	}
 
-	const ruleEmbed = new Discord.EmbedBuilder();
+	const ruleEmbed = new EmbedBuilder();
 	ruleEmbed.setColor(0x9D6FF3);
 	ruleEmbed.setTitle(`Rule: ${title}`);
 	ruleEmbed.setFooter({
@@ -69,24 +65,25 @@ async function updateRuleHandler(interaction) {
 	});
 	ruleEmbed.setDescription(description);
 
-	const actionRow = new Discord.ActionRowBuilder();
+	const actionRow = new ActionRowBuilder<ButtonBuilder>();
 
-	const confirmRuleUpdateButton = new Discord.ButtonBuilder();
+	const confirmRuleUpdateButton = new ButtonBuilder();
 	confirmRuleUpdateButton.setCustomId(`confirm-rule-update-${id}-${title}-${time}`);
 	confirmRuleUpdateButton.setLabel(`${id === 0 ? 'Create' : 'Update'} Rule`);
-	confirmRuleUpdateButton.setStyle(Discord.ButtonStyle.Success);
+	confirmRuleUpdateButton.setStyle(ButtonStyle.Success);
 
 	actionRow.addComponents(confirmRuleUpdateButton);
 
 	await interaction.editReply({
 		embeds: [ruleEmbed],
-		components: [actionRow],
-		ephemeral: true
+		components: [actionRow]
 	});
 }
 
-module.exports = {
-	name: updateRuleModal.data.custom_id,
+const handler: ModalHandler = {
+	name: updateRuleModal.data.custom_id!,
 	modal: updateRuleModal,
 	handler: updateRuleHandler
 };
+
+export default handler;

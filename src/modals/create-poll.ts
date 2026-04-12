@@ -1,27 +1,25 @@
-const Discord = require('discord.js');
-const { StringSelectMenuBuilder, ActionRowBuilder } = require('@discordjs/builders');
-const database = require('../database');
-const pollUtils = require('../utils/polls');
+import { StringSelectMenuBuilder, ActionRowBuilder, ModalBuilder } from '@discordjs/builders';
+import { AttachmentBuilder } from 'discord.js';
+import { createPoll } from '@/database';
+import { getPollImage, PollStatus } from '@/utils/polls';
+import type { ModalSubmitInteraction } from 'discord.js';
+import type { ModalHandler } from '@/types/general-types';
 
-const createPollModal = new Discord.ModalBuilder();
+const createPollModal = new ModalBuilder();
 createPollModal.setCustomId('create-poll');
 createPollModal.setTitle('Create a poll');
 
-/**
- *
- * @param {Discord.ModalSubmitInteraction} interaction
- */
-async function createPollHandler(interaction) {
+async function createPollHandler(interaction: ModalSubmitInteraction): Promise<void> {
 	const parts = interaction.customId.split('-');
 	const name = parts[2];
-	const optionsCount = parts[3];
+	const optionsCount = parseInt(parts[3]);
 	const expiryTime = parts[4];
 
 	const pollSelectMenu = new StringSelectMenuBuilder();
 	pollSelectMenu.setCustomId('poll-selection');
 	pollSelectMenu.setPlaceholder('Cast your vote...');
 
-	const options = [];
+	const options: string[] = [];
 	for (let i = 0; i < optionsCount; i++) {
 		const optionText = interaction.fields.getTextInputValue(`poll-option-${i}`).trim();
 
@@ -33,7 +31,7 @@ async function createPollHandler(interaction) {
 		});
 	}
 
-	const row = new ActionRowBuilder();
+	const row = new ActionRowBuilder<StringSelectMenuBuilder>();
 	row.addComponents(pollSelectMenu);
 
 	await interaction.reply({
@@ -42,10 +40,10 @@ async function createPollHandler(interaction) {
 
 	const message = await interaction.fetchReply();
 
-	await database.createPoll(interaction.guildId, message.id, message.channelId, name, expiryTime, options);
-	const pollImage = await pollUtils.getPollImage(message.id, pollUtils.PollStatus.Initial);
+	await createPoll(interaction.guildId, message.id, message.channelId, name, expiryTime, options);
+	const pollImage = await getPollImage(message.id, PollStatus.Initial);
 
-	const attachment = new Discord.AttachmentBuilder(pollImage, {
+	const attachment = new AttachmentBuilder(pollImage, {
 		name: 'image.png'
 	});
 
@@ -54,8 +52,10 @@ async function createPollHandler(interaction) {
 	});
 }
 
-module.exports = {
-	name: createPollModal.data.custom_id,
+const handler: ModalHandler = {
+	name: createPollModal.data.custom_id!,
 	modal: createPollModal,
 	handler: createPollHandler
 };
+
+export default handler;

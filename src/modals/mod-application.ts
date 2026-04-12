@@ -1,66 +1,67 @@
-const Discord = require('discord.js');
-const database = require('../database');
-const { button: acceptButton } = require('../buttons/mod-application-accept');
-const { button: denyButton } = require('../buttons/mod-application-deny');
+import { TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
+import { getGuildSetting } from '@/database';
+import acceptButtonHandler from '../buttons/mod-application-accept';
+import denyButtonHandler from '../buttons/mod-application-deny';
+import type { ModalHandler } from '@/types/general-types';
+import type { ServerSettings } from '@/types/db-types';
+import type { ButtonBuilder, GuildMember, ModalSubmitInteraction, SendableChannels } from 'discord.js';
 
-const priorExperience = new Discord.TextInputBuilder();
+const acceptButton = acceptButtonHandler.button;
+const denyButton = denyButtonHandler.button;
+
+const priorExperience = new TextInputBuilder();
 priorExperience.setCustomId('experience');
 priorExperience.setLabel('Do you have prior experience and if so, what?');
-priorExperience.setStyle(Discord.TextInputStyle.Short);
+priorExperience.setStyle(TextInputStyle.Short);
 priorExperience.setRequired(true);
 
-const timezone = new Discord.TextInputBuilder();
+const timezone = new TextInputBuilder();
 timezone.setCustomId('timezone');
 timezone.setLabel('What is your timezone and availability?');
-timezone.setStyle(Discord.TextInputStyle.Short);
+timezone.setStyle(TextInputStyle.Short);
 timezone.setRequired(true);
 
-const why = new Discord.TextInputBuilder();
+const why = new TextInputBuilder();
 why.setCustomId('why');
 why.setLabel('Why do you want to become a moderator?');
-why.setStyle(Discord.TextInputStyle.Short);
+why.setStyle(TextInputStyle.Short);
 why.setRequired(true);
 
-const pnid = new Discord.TextInputBuilder();
+const pnid = new TextInputBuilder();
 pnid.setCustomId('pnid');
 pnid.setLabel('What is your PNID?');
-pnid.setStyle(Discord.TextInputStyle.Short);
+pnid.setStyle(TextInputStyle.Short);
 pnid.setRequired(true);
 
-const extra = new Discord.TextInputBuilder();
+const extra = new TextInputBuilder();
 extra.setCustomId('extra');
 extra.setLabel('What else can you tell us about yourself?');
-extra.setStyle(Discord.TextInputStyle.Paragraph);
+extra.setStyle(TextInputStyle.Paragraph);
 extra.setRequired(true);
 
-const actionRow1 = new Discord.ActionRowBuilder();
+const actionRow1 = new ActionRowBuilder<TextInputBuilder>();
 actionRow1.addComponents(priorExperience);
 
-const actionRow2 = new Discord.ActionRowBuilder();
+const actionRow2 = new ActionRowBuilder<TextInputBuilder>();
 actionRow2.addComponents(timezone);
 
-const actionRow3 = new Discord.ActionRowBuilder();
+const actionRow3 = new ActionRowBuilder<TextInputBuilder>();
 actionRow3.addComponents(why);
 
-const actionRow4 = new Discord.ActionRowBuilder();
+const actionRow4 = new ActionRowBuilder<TextInputBuilder>();
 actionRow4.addComponents(pnid);
 
-const actionRow5 = new Discord.ActionRowBuilder();
+const actionRow5 = new ActionRowBuilder<TextInputBuilder>();
 actionRow5.addComponents(extra);
 
-const modApplicationModal = new Discord.ModalBuilder();
+const modApplicationModal = new ModalBuilder();
 modApplicationModal.setCustomId('mod-application');
 modApplicationModal.setTitle('Moderator Application');
 modApplicationModal.addComponents(actionRow1, actionRow2, actionRow3, actionRow4, actionRow5);
 
-/**
- *
- * @param {Discord.ModalSubmitInteraction} interaction
- */
-async function modApplicationHandler(interaction) {
+async function modApplicationHandler(interaction: ModalSubmitInteraction): Promise<void> {
 	await interaction.deferReply({
-		content: 'Thinking...',
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 
 	const modType = interaction.customId.split('-').pop();
@@ -70,10 +71,10 @@ async function modApplicationHandler(interaction) {
 	const why = interaction.fields.getTextInputValue('why');
 	const extra = interaction.fields.getTextInputValue('extra');
 
-	const applyingMember = await interaction.member.fetch();
-	const guild = await interaction.guild.fetch();
+	const applyingMember = await (interaction.member as GuildMember).fetch();
+	const guild = await interaction.guild!.fetch();
 
-	let selectedDBItem = '';
+	let selectedDBItem: Exclude<keyof ServerSettings, 'ay_lmao_disabled'>;
 	switch (modType) {
 		case 'discord':
 			selectedDBItem = 'mod_applications_channel_id';
@@ -90,16 +91,19 @@ async function modApplicationHandler(interaction) {
 		case 'juxt':
 			selectedDBItem = 'juxt_mod_apps_channel_id';
 			break;
+		default:
+			console.error(`Unexpected modType ${modType} from interaction customId ${interaction.customId}`);
+			throw new Error('application failed to submit - channel not setup!');
 	}
 
-	const channelId = await database.getGuildSetting(interaction.guildId, selectedDBItem);
+	const channelId = await getGuildSetting(interaction.guildId!, selectedDBItem);
 	const channel = channelId && await guild.channels.fetch(channelId);
 
 	if (!channel) {
 		throw new Error('application failed to submit - channel not setup!');
 	}
 
-	const modApplicationEmbed = new Discord.EmbedBuilder();
+	const modApplicationEmbed = new EmbedBuilder();
 
 	modApplicationEmbed.setColor(0x9D6FF3);
 
@@ -125,7 +129,7 @@ async function modApplicationHandler(interaction) {
 	modApplicationEmbed.setThumbnail('attachment://pending-icon.png');
 	modApplicationEmbed.setAuthor({
 		name: applyingMember.user.tag,
-		iconURL: applyingMember.user.avatarURL()
+		iconURL: applyingMember.user.avatarURL() ?? undefined
 	});
 	modApplicationEmbed.setFields([
 		{
@@ -151,14 +155,14 @@ async function modApplicationHandler(interaction) {
 	]);
 	modApplicationEmbed.setFooter({
 		text: 'Pretendo Network',
-		iconURL: guild.iconURL()
+		iconURL: guild.iconURL() ?? undefined
 	});
 	modApplicationEmbed.setTimestamp(Date.now());
 
-	const row = new Discord.ActionRowBuilder();
+	const row = new ActionRowBuilder<ButtonBuilder>();
 	row.addComponents(acceptButton, denyButton);
 
-	await channel.send({
+	await (channel as SendableChannels).send({
 		embeds: [modApplicationEmbed],
 		components: [row],
 		files: [
@@ -168,14 +172,15 @@ async function modApplicationHandler(interaction) {
 	});
 
 	await interaction.editReply({
-		content: 'Application submitted!',
-		ephemeral: true
+		content: 'Application submitted!'
 	});
 }
 
-module.exports = {
-	name: modApplicationModal.data.custom_id,
+const handler: ModalHandler = {
+	name: modApplicationModal.data.custom_id!,
 	cooldown: 1000 * 60 * 60 * 24 * 30, // ~ 1 month
 	modal: modApplicationModal,
 	handler: modApplicationHandler
 };
+
+export default handler;

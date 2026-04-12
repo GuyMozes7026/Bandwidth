@@ -1,24 +1,23 @@
-const Discord = require('discord.js');
-const { modal: denyModApplicationModal } = require('../modals/mod-application-deny');
+import { ButtonBuilder, ButtonStyle } from 'discord.js';
+import denyModApplicationModalHandler from '../modals/mod-application-deny';
+import type { ButtonHandler } from '@/types/general-types';
+import type { APIButtonComponentWithCustomId, ButtonInteraction } from 'discord.js';
 
-const denyButton = new Discord.ButtonBuilder();
+const denyModApplicationModal = denyModApplicationModalHandler.modal;
+
+const denyButton = new ButtonBuilder();
 denyButton.setCustomId('mod-application-deny');
 denyButton.setLabel('Deny');
-denyButton.setStyle(Discord.ButtonStyle.Danger);
+denyButton.setStyle(ButtonStyle.Danger);
 
-/**
- *
- * @param {Discord.ButtonInteraction} interaction
- */
-async function modApplicationDenyHandler(interaction) {
-	interaction.showModal(denyModApplicationModal, {
-		client: interaction.client,
-		interaction: interaction
-	});
+async function modApplicationDenyHandler(interaction: ButtonInteraction): Promise<void> {
+	await interaction.showModal(denyModApplicationModal);
 }
 
-module.exports = {
-	name: denyButton.data.custom_id,
+const handler: ButtonHandler = {
+	name: (denyButton.data as APIButtonComponentWithCustomId).custom_id,
 	button: denyButton,
 	handler: modApplicationDenyHandler
 };
+
+export default handler;

@@ -1,16 +1,14 @@
-const Discord = require('discord.js');
-const errorCodeUtils = require('../utils/errorCode');
+import { ButtonBuilder, ButtonStyle } from 'discord.js';
+import { checkForErrorCode } from '../utils/errorCode';
+import type { ButtonHandler } from '@/types/general-types';
+import type { APIButtonComponentWithCustomId, ButtonInteraction } from 'discord.js';
 
-const expandErrorButton = new Discord.ButtonBuilder();
+const expandErrorButton = new ButtonBuilder();
 expandErrorButton.setCustomId('expand');
 expandErrorButton.setLabel('Expand Error Info');
-expandErrorButton.setStyle(Discord.ButtonStyle.Primary);
+expandErrorButton.setStyle(ButtonStyle.Primary);
 
-/**
- *
- * @param {Discord.ButtonInteraction} interaction
- */
-async function expandErrorHandler(interaction) {
+async function expandErrorHandler(interaction: ButtonInteraction): Promise<void> {
 	interaction.deferUpdate();
 
 	const { message } = interaction;
@@ -18,7 +16,7 @@ async function expandErrorHandler(interaction) {
 	const ogButton = message.components[0];
 
 	// Grab that error code again
-	const errorCodeEmbed = errorCodeUtils.checkForErrorCode(message.embeds[0].title);
+	const errorCodeEmbed = checkForErrorCode(message.embeds[0].title!)!;
 
 	// Swap the embed out, while removing our button component
 	message.edit({
@@ -36,8 +34,10 @@ async function expandErrorHandler(interaction) {
 	});
 }
 
-module.exports = {
-	name: expandErrorButton.data.custom_id,
+const handler: ButtonHandler = {
+	name: (expandErrorButton.data as APIButtonComponentWithCustomId).custom_id,
 	button: expandErrorButton,
 	handler: expandErrorHandler
 };
+
+export default handler;

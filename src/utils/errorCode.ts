@@ -1,4 +1,4 @@
-import Discord from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 import errors from '@pretendonetwork/error-codes';
 
 const WIIU_SUPPORT_CODE_REGEX = /(\b1\d{2}-\d{4}\b)/gm;
@@ -6,8 +6,8 @@ const THREE_DS_SUPPORT_CODE_REGEX = /(\b0\d{2}-\d{4}\b)/gm;
 // * There is probably a better way to do this regex
 const PRETENDO_SUPPORT_CODE_REGEX = /(\b678-\d{4}\b|\b598-\d{4}\b|\b727-\d{4}\b)/gm; // * 678 = Martini, 598 = Juxtaposition, 727 = PNID Account
 
-export function checkForErrorCode(text: string): Discord.EmbedBuilder | undefined {
-	let embed: Discord.EmbedBuilder | undefined;
+export function checkForErrorCode(text: string): EmbedBuilder | undefined {
+	let embed: EmbedBuilder | undefined;
 	let error: string | undefined;
 
 	// * Run this check first to avoid WiiU conflicts
@@ -90,24 +90,24 @@ export function checkForErrorCode(text: string): Discord.EmbedBuilder | undefine
 	return embed;
 }
 
-function getWiiUEmbed(): Discord.EmbedBuilder {
-	const embed = new Discord.EmbedBuilder();
+function getWiiUEmbed(): EmbedBuilder {
+	const embed = new EmbedBuilder();
 
 	embed.setColor(0x009AC7);
 
 	return embed;
 }
 
-function get3DSEmbed(): Discord.EmbedBuilder {
-	const embed = new Discord.EmbedBuilder();
+function get3DSEmbed(): EmbedBuilder {
+	const embed = new EmbedBuilder();
 
 	embed.setColor(0xD12228);
 
 	return embed;
 }
 
-function getPretendoEmbed(): Discord.EmbedBuilder {
-	const embed = new Discord.EmbedBuilder();
+function getPretendoEmbed(): EmbedBuilder {
+	const embed = new EmbedBuilder();
 
 	embed.setColor(0x131733);
 
