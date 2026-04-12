@@ -1,29 +1,29 @@
-const Discord = require('discord.js');
-const database = require('../database');
+import { MessageFlags, StringSelectMenuBuilder } from 'discord.js';
+import { removeRule } from '@/database';
+import type { SelectMenuHandler } from '@/types/general-types';
+import type { StringSelectMenuInteraction } from 'discord.js';
 
-const removeRuleMenu = new Discord.StringSelectMenuBuilder();
+const removeRuleMenu = new StringSelectMenuBuilder();
 removeRuleMenu.setCustomId('remove-rule-selection');
 removeRuleMenu.setMaxValues(5);
 removeRuleMenu.setPlaceholder('Select a rule to remove');
 
-/**
- *
- * @param {Discord.SelectMenuInteraction} interaction
- */
-async function removeRuleHandler(interaction) {
-	const { guildId } = interaction;
+async function removeRuleHandler(interaction: StringSelectMenuInteraction): Promise<void> {
+	const guildId = interaction.guildId!;
 	const ruleId = interaction.values[0];
 
-	await database.removeRule(guildId, ruleId);
+	await removeRule(guildId, ruleId);
 
-	interaction.reply({
+	await interaction.reply({
 		content: 'Rule removed!',
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 }
 
-module.exports = {
-	name: removeRuleMenu.data.custom_id,
+const handler: SelectMenuHandler = {
+	name: removeRuleMenu.data.custom_id!,
 	select_menu: removeRuleMenu,
 	handler: removeRuleHandler
 };
+
+export default handler;

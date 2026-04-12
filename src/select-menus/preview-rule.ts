@@ -1,22 +1,24 @@
-const Discord = require('discord.js');
-const database = require('../database');
+import { StringSelectMenuBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
+import { getRule } from '@/database';
+import type { SelectMenuHandler } from '@/types/general-types';
+import type { StringSelectMenuInteraction } from 'discord.js';
 
-const previewRuleMenu = new Discord.StringSelectMenuBuilder();
+const previewRuleMenu = new StringSelectMenuBuilder();
 previewRuleMenu.setCustomId('preview-rule-selection');
 previewRuleMenu.setMaxValues(5);
 previewRuleMenu.setPlaceholder('Select a rule to preview');
 
-/**
- *
- * @param {Discord.SelectMenuInteraction} interaction
- */
-async function previewRuleHandler(interaction) {
-	const { guildId } = interaction;
+async function previewRuleHandler(interaction: StringSelectMenuInteraction): Promise<void> {
+	const guildId = interaction.guildId!;
 	const ruleId = interaction.values[0];
 
-	const rule = await database.getRule(guildId, ruleId);
+	const rule = await getRule(guildId, ruleId);
 
-	const ruleEmbed = new Discord.EmbedBuilder();
+	if (!rule) {
+		throw new Error(`Rule with ID ${ruleId} not found`);
+	}
+
+	const ruleEmbed = new EmbedBuilder();
 	ruleEmbed.setColor(0x9D6FF3);
 	ruleEmbed.setTitle(`Rule: ${rule.title}`);
 	ruleEmbed.setFooter({
@@ -25,14 +27,16 @@ async function previewRuleHandler(interaction) {
 
 	ruleEmbed.setDescription(rule.description);
 
-	interaction.reply({
+	await interaction.reply({
 		embeds: [ruleEmbed],
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 }
 
-module.exports = {
-	name: previewRuleMenu.data.custom_id,
+const handler: SelectMenuHandler = {
+	name: previewRuleMenu.data.custom_id!,
 	select_menu: previewRuleMenu,
 	handler: previewRuleHandler
 };
+
+export default handler;

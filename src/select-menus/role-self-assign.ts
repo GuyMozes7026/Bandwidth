@@ -1,6 +1,8 @@
-const Discord = require('discord.js');
+import { StringSelectMenuBuilder, ActionRowBuilder, MessageFlags } from 'discord.js';
+import type { SelectMenuHandler } from '@/types/general-types';
+import type { GuildMember, StringSelectMenuInteraction } from 'discord.js';
 
-const roleSelectMenu = new Discord.StringSelectMenuBuilder();
+const roleSelectMenu = new StringSelectMenuBuilder();
 roleSelectMenu.setCustomId('role-self-assign');
 roleSelectMenu.setMaxValues(1);
 roleSelectMenu.setPlaceholder('Select a role to toggle');
@@ -17,18 +19,14 @@ roleSelectMenu.addOptions([
 	}
 ]);
 
-/**
- *
- * @param {Discord.SelectMenuInteraction} interaction
- */
-async function roleSelfAssignHandler(interaction) {
+async function roleSelfAssignHandler(interaction: StringSelectMenuInteraction): Promise<void> {
 	await interaction.deferReply({
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 
 	const roleName = interaction.values[0];
-	const member = interaction.member;
-	const guild = await interaction.guild.fetch();
+	const member = interaction.member as GuildMember;
+	const guild = await interaction.guild!.fetch();
 	const roles = await guild.roles.fetch();
 	const role = roles.find(role => role.name.toLowerCase() === roleName);
 
@@ -51,7 +49,7 @@ async function roleSelfAssignHandler(interaction) {
 
 	const { message } = interaction;
 
-	const row = new Discord.ActionRowBuilder();
+	const row = new ActionRowBuilder<StringSelectMenuBuilder>();
 	row.addComponents(roleSelectMenu);
 
 	await message.edit({
@@ -64,8 +62,10 @@ async function roleSelfAssignHandler(interaction) {
 	});
 }
 
-module.exports = {
-	name: roleSelectMenu.data.custom_id,
+const handler: SelectMenuHandler = {
+	name: roleSelectMenu.data.custom_id!,
 	select_menu: roleSelectMenu,
 	handler: roleSelfAssignHandler
 };
+
+export default handler;
