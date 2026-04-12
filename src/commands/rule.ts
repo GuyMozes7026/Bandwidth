@@ -1,26 +1,23 @@
-const Discord = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const database = require('../database');
-const { modal: updateRuleModal } = require('../modals/update-rule');
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { ActionRowBuilder, PermissionFlagsBits, StringSelectMenuBuilder } from 'discord.js';
+import { getAllRules } from '@/database';
+import updateRuleModalHandler from '../modals/update-rule';
+import type { CommandHandler } from '@/types/general-types';
+import type { ChatInputCommandInteraction } from 'discord.js';
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function rulesHandler(interaction) {
+const updateRuleModal = updateRuleModalHandler.modal;
+
+async function rulesHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	const { guildId } = interaction;
 	// const ruleNumber = interaction.options.getInteger('rule-number');
 
 	if (interaction.options.getSubcommand() === 'create') {
-		interaction.showModal(updateRuleModal, {
-			client: interaction.client,
-			interaction: interaction
-		});
+		await interaction.showModal(updateRuleModal);
 		return;
 	}
 
 	if (['update', 'preview', 'remove'].includes(interaction.options.getSubcommand())) {
-		const rules = await database.getAllRules(guildId);
+		const rules = await getAllRules(guildId!);
 
 		if (rules.length === 0) {
 			await interaction.reply({
@@ -30,7 +27,7 @@ async function rulesHandler(interaction) {
 			return;
 		}
 
-		const ruleSelectMenu = new Discord.StringSelectMenuBuilder();
+		const ruleSelectMenu = new StringSelectMenuBuilder();
 		ruleSelectMenu.setCustomId(`${interaction.options.getSubcommand()}-rule-selection`);
 		ruleSelectMenu.setPlaceholder('Select a rule...');
 
@@ -41,7 +38,7 @@ async function rulesHandler(interaction) {
 			});
 		}
 
-		const row = new Discord.ActionRowBuilder();
+		const row = new ActionRowBuilder<StringSelectMenuBuilder>();
 		row.addComponents(ruleSelectMenu);
 
 		await interaction.reply({
@@ -58,7 +55,7 @@ async function rulesHandler(interaction) {
 
 const command = new SlashCommandBuilder();
 
-command.setDefaultMemberPermissions(Discord.PermissionFlagsBits.Administrator);
+command.setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 command.setName('rule');
 command.setDescription('Change options relating to rules');
 command.addSubcommand((cmd) => {
@@ -82,9 +79,11 @@ command.addSubcommand((cmd) => {
 	return cmd;
 });
 
-module.exports = {
+const handler: CommandHandler = {
 	name: command.name,
 	help: 'Change rules of the bot',
 	handler: rulesHandler,
 	deploy: command.toJSON()
 };
+
+export default handler;

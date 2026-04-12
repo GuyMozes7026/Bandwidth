@@ -1,33 +1,30 @@
-const Discord = require('discord.js');
-const { ContextMenuCommandBuilder } = require('@discordjs/builders');
-const { ApplicationCommandType } = require('discord-api-types/v10');
-const database = require('../../database');
+import { ActionRowBuilder, ButtonBuilder, ContextMenuCommandBuilder, EmbedBuilder } from '@discordjs/builders';
+import { ApplicationCommandType, ButtonStyle, PermissionFlagsBits } from 'discord.js';
+import { getGuildSetting } from '@/database';
+import type { ContextMenuCommandInteraction, GuildChannel, GuildMember } from 'discord.js';
+import type { ContextMenuHandler } from '@/types/general-types';
 
-/**
- *
- * @param {Discord.ContextMenuCommandInteraction} interaction
- */
-async function warnPiracyHandler(interaction) {
-	const reportsChannelId = await database.getGuildSetting(interaction.guildId, 'reports_channel_id');
-	const channels = await interaction.guild.channels.fetch();
-	const reportsChannel = channels.find(channel => channel.id === reportsChannelId);
+async function warnPiracyHandler(interaction: ContextMenuCommandInteraction): Promise<void> {
+	const reportsChannelId = await getGuildSetting(interaction.guildId!, 'reports_channel_id');
+	const channels = await interaction.guild!.channels.fetch();
+	const reportsChannel = channels.find(channel => channel!.id === reportsChannelId);
 
-	if (!reportsChannel) {
+	if (!reportsChannel || !reportsChannel.isSendable()) {
 		throw new Error('Report failed to submit - channel not setup');
 	}
 
-	const warnPiracyEmbed = new Discord.EmbedBuilder();
+	const warnPiracyEmbed = new EmbedBuilder();
 	warnPiracyEmbed.setColor(0xF36F8A);
 	warnPiracyEmbed.setTitle('Potential Piracy Reported');
 	warnPiracyEmbed.setDescription('A user has flagged this message as potentially relating to piracy. Pretendo Network does not support piracy of any kind. Please review [Rule 5](https://discord.com/channels/408718485913468928/982632532484972574/1444460663669002281).\n\nIf you have any questions, please ask moderators in a <#1370584407261581392> thread.');
 
-	const message = await interaction.channel.messages.fetch(interaction.targetId);
+	const message = await interaction.channel!.messages.fetch(interaction.targetId);
 
 	if (message.author.bot) {
 		throw new Error('Cannot report bot messages');
 	}
 
-	const executor = await interaction.member.fetch();
+	const executor = await (interaction.member as GuildMember).fetch();
 
 	if (message.author.id === executor.user.id) {
 		throw new Error('Cannot report own messages');
@@ -37,7 +34,7 @@ async function warnPiracyHandler(interaction) {
 		embeds: [warnPiracyEmbed]
 	});
 
-	const reportEmbed = new Discord.EmbedBuilder();
+	const reportEmbed = new EmbedBuilder();
 
 	reportEmbed.setColor(0xF36F8A);
 	reportEmbed.setTitle('User Report');
@@ -50,12 +47,12 @@ async function warnPiracyHandler(interaction) {
 		},
 		{
 			name: 'Reporting User',
-			value: `<@${interaction.member.id}>\n${interaction.member.id}`,
+			value: `<@${executor.id}>\n${executor.id}`,
 			inline: true
 		},
 		{
 			name: 'Channel',
-			value: `<#${interaction.channelId}>\n${interaction.channel.name}`,
+			value: `<#${interaction.channelId}>\n${(interaction.channel as GuildChannel).name}`,
 			inline: true
 		},
 		{
@@ -71,18 +68,18 @@ async function warnPiracyHandler(interaction) {
 	);
 	reportEmbed.setFooter({
 		text: 'Pretendo Network',
-		iconURL: interaction.guild.iconURL()
+		iconURL: interaction.guild!.iconURL() ?? undefined
 	});
 	reportEmbed.setTimestamp(Date.now());
 
-	const jumpButton = new Discord.ButtonBuilder();
+	const jumpButton = new ButtonBuilder();
 
 	jumpButton.setLabel('Jump!');
-	jumpButton.setStyle(Discord.ButtonStyle.Link);
-	jumpButton.setEmoji('📨');
+	jumpButton.setStyle(ButtonStyle.Link);
+	jumpButton.setEmoji({ name: '📨' });
 	jumpButton.setURL(message.url);
 
-	const row = new Discord.ActionRowBuilder();
+	const row = new ActionRowBuilder<ButtonBuilder>();
 	row.addComponents(jumpButton);
 
 	await reportsChannel.send({
@@ -98,13 +95,15 @@ async function warnPiracyHandler(interaction) {
 
 const contextMenu = new ContextMenuCommandBuilder();
 
-contextMenu.setDefaultMemberPermissions(Discord.PermissionFlagsBits.SendMessages);
+contextMenu.setDefaultMemberPermissions(PermissionFlagsBits.SendMessages);
 contextMenu.setName('Report Piracy');
 contextMenu.setType(ApplicationCommandType.Message);
 
-module.exports = {
+const handler: ContextMenuHandler = {
 	name: contextMenu.name,
 	help: 'Report a message as relating to piracy. This action will be recorded with the information about yourself and the author of the message to prevent abuse.\n```\nUsage: Right click a message and navigate to \'Apps > Report Piracy\'\n```',
 	handler: warnPiracyHandler,
 	deploy: contextMenu.toJSON()
 };
+
+export default handler;

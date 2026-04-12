@@ -1,18 +1,15 @@
-const Discord = require('discord.js');
-const { ContextMenuCommandBuilder } = require('@discordjs/builders');
-const { ApplicationCommandType } = require('discord-api-types/v10');
-const pollUtils = require('../../utils/polls');
+import { ContextMenuCommandBuilder } from '@discordjs/builders';
+import { ApplicationCommandType, PermissionFlagsBits } from 'discord.js';
+import { closePoll } from '@/utils/polls';
+import type { ContextMenuCommandInteraction } from 'discord.js';
+import type { ContextMenuHandler } from '@/types/general-types';
 
-/**
- *
- * @param {Discord.ContextMenuInteraction} interaction
- */
-async function closePollHandler(interaction) {
+async function closePollHandler(interaction: ContextMenuCommandInteraction): Promise<void> {
 	const { targetId } = interaction;
 
-	const message = await interaction.channel.messages.fetch(targetId);
+	const message = await interaction.channel!.messages.fetch(targetId);
 
-	pollUtils.closePoll(message);
+	await closePoll(message);
 
 	await interaction.reply({
 		content: 'Poll closed!',
@@ -22,12 +19,14 @@ async function closePollHandler(interaction) {
 
 const contextMenu = new ContextMenuCommandBuilder();
 
-contextMenu.setDefaultMemberPermissions(Discord.PermissionFlagsBits.ManageMessages);
+contextMenu.setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
 contextMenu.setName('Close Poll');
 contextMenu.setType(ApplicationCommandType.Message);
 
-module.exports = {
+const handler: ContextMenuHandler = {
 	name: contextMenu.name,
 	handler: closePollHandler,
 	deploy: contextMenu.toJSON()
 };
+
+export default handler;

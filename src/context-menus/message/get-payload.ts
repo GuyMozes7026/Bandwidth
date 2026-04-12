@@ -1,29 +1,26 @@
-const Discord = require('discord.js');
-const { ContextMenuCommandBuilder } = require('@discordjs/builders');
-const { ApplicationCommandType } = require('discord-api-types/v10');
+import { ContextMenuCommandBuilder } from '@discordjs/builders';
+import { ApplicationCommandType, AttachmentBuilder, PermissionFlagsBits } from 'discord.js';
+import type { ContextMenuHandler } from '@/types/general-types';
+import type { ContextMenuCommandInteraction } from 'discord.js';
 
-/**
- *
- * @param {Discord.ContextMenuInteraction} interaction
- */
-async function reportUserHandler(interaction) {
+async function reportUserHandler(interaction: ContextMenuCommandInteraction): Promise<void> {
 	const { targetId } = interaction;
 
-	const message = await interaction.channel.messages.fetch(targetId);
-	const messageJSON = message.toJSON();
+	const message = await interaction.channel!.messages.fetch(targetId);
+	const messageJSON = message.toJSON() as Record<string, unknown>;
 
 	// Only take the properties we need
-	const messagePayload = {
+	const messagePayload = JSON.stringify({
 		content: messageJSON.content || null,
 		embeds: messageJSON.embeds || [],
 		attachments: messageJSON.attachments || [],
 		components: messageJSON.components || []
-	};
+	});
 
 	await interaction.reply({
 		content: 'Message Payload Attached',
 		files: [
-			new Discord.AttachmentBuilder(Buffer.from(JSON.stringify(messagePayload)), {
+			new AttachmentBuilder(Buffer.from(messagePayload), {
 				name: 'message-payload.json'
 			})
 		],
@@ -33,12 +30,14 @@ async function reportUserHandler(interaction) {
 
 const contextMenu = new ContextMenuCommandBuilder();
 
-contextMenu.setDefaultMemberPermissions(Discord.PermissionFlagsBits.Administrator);
+contextMenu.setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 contextMenu.setName('Get Message Payload');
 contextMenu.setType(ApplicationCommandType.Message);
 
-module.exports = {
+const handler: ContextMenuHandler = {
 	name: contextMenu.name,
 	handler: reportUserHandler,
 	deploy: contextMenu.toJSON()
 };
+
+export default handler;

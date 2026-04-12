@@ -2,7 +2,7 @@ import discordTranscripts from 'discord-html-transcripts';
 import { TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import { getGuildSetting } from '@/database';
 import type { ModalHandler } from '@/types/general-types';
-import type { GuildChannel, GuildMember, ModalSubmitInteraction, SendableChannels } from 'discord.js';
+import type { GuildChannel, GuildMember, ModalSubmitInteraction } from 'discord.js';
 
 const reason = new TextInputBuilder();
 reason.setCustomId('reason');
@@ -47,7 +47,7 @@ async function reportUserHandler(interaction: ModalSubmitInteraction): Promise<v
 	const channels = await interaction.guild!.channels.fetch();
 	const reportsChannel = channels.find(channel => channel!.id === reportsChannelId);
 
-	if (!reportsChannel) {
+	if (!reportsChannel || !reportsChannel.isSendable()) {
 		throw new Error('Report failed to submit - channel not setup');
 	}
 
@@ -89,7 +89,7 @@ async function reportUserHandler(interaction: ModalSubmitInteraction): Promise<v
 		poweredBy: false
 	});
 
-	const message = await (reportsChannel as SendableChannels).send({
+	const message = await reportsChannel.send({
 		embeds: [reportEmbed],
 		files: [transcript]
 	});

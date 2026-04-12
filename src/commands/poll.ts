@@ -1,44 +1,37 @@
-const Discord = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { ActionRowBuilder, ModalBuilder, PermissionFlagsBits, TextInputBuilder, TextInputStyle } from 'discord.js';
+import type { CommandHandler } from '@/types/general-types';
+import type { ChatInputCommandInteraction } from 'discord.js';
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function pollHandler(interaction) {
+async function pollHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	const name = interaction.options.getString('name');
-	const optionsCount = interaction.options.getInteger('options-count');
+	const optionsCount = interaction.options.getInteger('options-count')!;
 	const expiryTime = interaction.options.getInteger('expiry-time') || 0;
 
-	const createPollModal = new Discord.ModalBuilder();
+	const createPollModal = new ModalBuilder();
 	createPollModal.setCustomId(`create-poll-${name}-${optionsCount}-${expiryTime}`);
 	createPollModal.setTitle('Create a poll');
 
 	for (let i = 0; i < optionsCount; i++) {
-		const optionTextInput = new Discord.TextInputBuilder();
+		const optionTextInput = new TextInputBuilder();
 		optionTextInput.setCustomId(`poll-option-${i}`);
-		optionTextInput.setStyle(Discord.TextInputStyle.Short);
+		optionTextInput.setStyle(TextInputStyle.Short);
 		optionTextInput.setLabel(`Option ${i + 1}`);
 		optionTextInput.setPlaceholder('Option text');
 		optionTextInput.setMaxLength(55);
 
-		const optionActionRow = new Discord.ActionRowBuilder();
+		const optionActionRow = new ActionRowBuilder<TextInputBuilder>();
 		optionActionRow.addComponents(optionTextInput);
 
 		createPollModal.addComponents(optionActionRow);
 	}
 
-	interaction.showModal(createPollModal, {
-		client: interaction.client,
-		interaction: interaction
-	});
-
-	return;
+	await interaction.showModal(createPollModal);
 }
 
 const command = new SlashCommandBuilder();
 
-command.setDefaultMemberPermissions(Discord.PermissionFlagsBits.ManageMessages);
+command.setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
 command.setName('poll');
 command.setDescription('Create a new poll');
 command.addStringOption((option) => {
@@ -63,9 +56,11 @@ command.addIntegerOption((option) => {
 	return option;
 });
 
-module.exports = {
+const handler: CommandHandler = {
 	name: command.name,
 	help: 'Edit polls',
 	handler: pollHandler,
 	deploy: command.toJSON()
 };
+
+export default handler;

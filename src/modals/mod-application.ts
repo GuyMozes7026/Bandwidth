@@ -4,7 +4,7 @@ import acceptButtonHandler from '../buttons/mod-application-accept';
 import denyButtonHandler from '../buttons/mod-application-deny';
 import type { ModalHandler } from '@/types/general-types';
 import type { ServerSettings } from '@/types/db-types';
-import type { ButtonBuilder, GuildMember, ModalSubmitInteraction, SendableChannels } from 'discord.js';
+import type { ButtonBuilder, GuildMember, ModalSubmitInteraction } from 'discord.js';
 
 const acceptButton = acceptButtonHandler.button;
 const denyButton = denyButtonHandler.button;
@@ -99,7 +99,7 @@ async function modApplicationHandler(interaction: ModalSubmitInteraction): Promi
 	const channelId = await getGuildSetting(interaction.guildId!, selectedDBItem);
 	const channel = channelId && await guild.channels.fetch(channelId);
 
-	if (!channel) {
+	if (!channel || !channel.isSendable()) {
 		throw new Error('application failed to submit - channel not setup!');
 	}
 
@@ -162,7 +162,7 @@ async function modApplicationHandler(interaction: ModalSubmitInteraction): Promi
 	const row = new ActionRowBuilder<ButtonBuilder>();
 	row.addComponents(acceptButton, denyButton);
 
-	await (channel as SendableChannels).send({
+	await channel.send({
 		embeds: [modApplicationEmbed],
 		components: [row],
 		files: [

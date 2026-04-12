@@ -1,6 +1,9 @@
-const Discord = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const database = require('../database');
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { MessageFlags, PermissionFlagsBits } from 'discord.js';
+import { getGuildSetting, updateGuildSetting } from '@/database';
+import type { ServerSettings } from '@/types/db-types';
+import type { ChatInputCommandInteraction } from 'discord.js';
+import type { CommandHandler } from '@/types/general-types';
 
 const editableOptions = [
 	'admin_role_id',
@@ -22,31 +25,26 @@ const editableOptions = [
 	'ay_lmao_disabled'
 ];
 
-async function verifyInputtedKey(interaction) {
-	const key = interaction.options.getString('key');
-	if (!editableOptions.includes(key)) {
+function verifyInputtedKey(key: string | null): asserts key is keyof ServerSettings {
+	if (!key || !editableOptions.includes(key)) {
 		throw new Error('Cannot edit this setting - not a valid setting');
 	}
 }
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function settingsHandler(interaction) {
-	const { guildId } = interaction;
+async function settingsHandler(interaction: ChatInputCommandInteraction): Promise<void> {
+	const guildId = interaction.guildId!;
 	const key = interaction.options.getString('key');
 
 	if (interaction.options.getSubcommand() === 'get') {
-		await verifyInputtedKey(interaction);
+		verifyInputtedKey(key);
 
-		const value = await database.getGuildSetting(guildId, key);
+		const value = await getGuildSetting(guildId, key);
 
 		// this is hellish string concatenation, I know
 		await interaction.reply({
 			content:
 				'```\n' + key + '=' + '\'' + `${value}` + '\'' + '\n```',
-			ephemeral: true,
+			flags: MessageFlags.Ephemeral,
 			allowedMentions: {
 				parse: [] // * Dont allow tagging anything
 			}
@@ -55,12 +53,12 @@ async function settingsHandler(interaction) {
 	}
 
 	if (interaction.options.getSubcommand() === 'set') {
-		await verifyInputtedKey(interaction);
+		verifyInputtedKey(key);
 
-		await database.updateGuildSetting(guildId, key, interaction.options.getString('value'));
+		await updateGuildSetting(guildId, key, interaction.options.getString('value')!);
 		await interaction.reply({
 			content: `setting \`${key}\` has been saved successfully`,
-			ephemeral: true,
+			flags: MessageFlags.Ephemeral,
 			allowedMentions: {
 				parse: [] // dont allow tagging anything
 			}
@@ -73,7 +71,7 @@ async function settingsHandler(interaction) {
 
 const command = new SlashCommandBuilder();
 
-command.setDefaultMemberPermissions(Discord.PermissionFlagsBits.Administrator);
+command.setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 command.setName('settings');
 command.setDescription('Setup the bot');
 command.addSubcommand((cmd) => {
@@ -119,9 +117,11 @@ command.addSubcommand((cmd) => {
 	return cmd;
 });
 
-module.exports = {
+const handler: CommandHandler = {
 	name: command.name,
 	help: 'Change settings of the bot',
 	handler: settingsHandler,
 	deploy: command.toJSON()
 };
+
+export default handler;

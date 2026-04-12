@@ -1,12 +1,13 @@
 import type {
-	APIApplicationCommand,
 	BaseInteraction,
 	ButtonBuilder,
 	ButtonInteraction,
-	CommandInteraction,
+	ChatInputCommandInteraction,
 	ContextMenuCommandInteraction,
 	ModalBuilder,
 	ModalSubmitInteraction,
+	RESTPostAPIChatInputApplicationCommandsJSONBody,
+	RESTPostAPIContextMenuApplicationCommandsJSONBody,
 	StringSelectMenuBuilder,
 	StringSelectMenuInteraction
 } from 'discord.js';
@@ -31,16 +32,16 @@ export interface ButtonHandler {
 export interface CommandHandler {
 	name: string;
 	help?: string;
-	handler: HandlerFunction<CommandInteraction>;
-	deploy: APIApplicationCommand;
-	cooldown?: number; // ? no command has this but chat-input-command-handler checks for it
+	handler: HandlerFunction<ChatInputCommandInteraction>;
+	deploy: RESTPostAPIChatInputApplicationCommandsJSONBody;
+	cooldown?: number; // ? unused, but chat-input-command-handler checks for it
 }
 
 export interface ContextMenuHandler {
 	name: string;
 	help?: string;
 	handler: HandlerFunction<ContextMenuCommandInteraction>;
-	deploy: APIApplicationCommand;
+	deploy: RESTPostAPIContextMenuApplicationCommandsJSONBody;
 }
 
 export interface ModalHandler {

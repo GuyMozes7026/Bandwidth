@@ -1,18 +1,16 @@
-const Discord = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { MessageFlags, PermissionFlagsBits } from 'discord.js';
+import type { ChatInputCommandInteraction, GuildMember } from 'discord.js';
+import type { CommandHandler } from '@/types/general-types';
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function toggleroleHandler(interaction) {
+async function toggleroleHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	await interaction.deferReply({
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 
 	const roleName = interaction.options.getString('role');
-	const member = interaction.member;
-	const guild = await interaction.guild.fetch();
+	const member = interaction.member as GuildMember;
+	const guild = await interaction.guild!.fetch();
 	const roles = await guild.roles.fetch();
 	const role = roles.find(role => role.name.toLowerCase() === roleName);
 
@@ -41,7 +39,7 @@ async function toggleroleHandler(interaction) {
 
 const command = new SlashCommandBuilder();
 
-command.setDefaultMemberPermissions(Discord.PermissionFlagsBits.SendMessages);
+command.setDefaultMemberPermissions(PermissionFlagsBits.SendMessages);
 command.setName('togglerole');
 command.setDescription('Toggle user roles');
 command.addStringOption((option) => {
@@ -56,9 +54,11 @@ command.addStringOption((option) => {
 	return option;
 });
 
-module.exports = {
+const handler: CommandHandler = {
 	name: command.name,
 	help: 'Toggle on/off a given user role.\n```\nUsage: /togglerole <role>\n```',
 	handler: toggleroleHandler,
 	deploy: command.toJSON()
 };
+
+export default handler;

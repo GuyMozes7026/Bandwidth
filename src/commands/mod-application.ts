@@ -1,16 +1,18 @@
-const Discord = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const database = require('../database');
-const { modal: modApplicationModal } = require('../modals/mod-application');
+import { PermissionFlagsBits } from 'discord.js';
+import { EmbedBuilder, SlashCommandBuilder } from '@discordjs/builders';
+import { getGuildSetting } from '@/database';
+import modApplicationModalHandler from '../modals/mod-application';
+import type { CommandHandler } from '@/types/general-types';
+import type { ServerSettings } from '@/types/db-types';
+import type { ChatInputCommandInteraction, GuildMember } from 'discord.js';
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function modApplicationHandler(interaction) {
-	modApplicationModal.setCustomId('mod-application-' + interaction.options.get('role').value);
+const modApplicationModal = modApplicationModalHandler.modal;
 
-	if (interaction.options.get('18-or-older').value == 'no') {
+async function modApplicationHandler(interaction: ChatInputCommandInteraction): Promise<void> {
+	const modType = interaction.options.get('role')?.value;
+	modApplicationModal.setCustomId(`mod-application-${modType}`);
+
+	if (interaction.options.get('18-or-older')!.value === 'no') {
 		await interaction.reply({
 			content: 'We are not accepting applications from individuals under the age of 18.',
 			ephemeral: true,
@@ -19,9 +21,7 @@ async function modApplicationHandler(interaction) {
 			}
 		});
 
-		const modType = interaction.options.get('role').value;
-
-		let selectedDBItem = '';
+		let selectedDBItem: Exclude<keyof ServerSettings, 'ay_lmao_disabled'>;
 		switch (modType) {
 			case 'discord':
 				selectedDBItem = 'mod_applications_channel_id';
@@ -38,14 +38,20 @@ async function modApplicationHandler(interaction) {
 			case 'juxt':
 				selectedDBItem = 'juxt_mod_apps_channel_id';
 				break;
+			default:
+				throw new Error('Invalid role specified'); // * Should be impossible to get here
 		}
 
-		const applyingMember = await interaction.member.fetch();
-		const guild = await interaction.guild.fetch();
-		const channelId = await database.getGuildSetting(interaction.guildId, selectedDBItem);
+		const applyingMember = await (interaction.member as GuildMember).fetch();
+		const guild = await interaction.guild!.fetch();
+		const channelId = await getGuildSetting(interaction.guildId!, selectedDBItem);
 		const channel = channelId && await guild.channels.fetch(channelId);
 
-		const modApplicationEmbed = new Discord.EmbedBuilder();
+		if (!channel || !channel.isSendable()) {
+			throw new Error('Channel not set up');
+		}
+
+		const modApplicationEmbed = new EmbedBuilder();
 
 		modApplicationEmbed.setColor(0xF36F8A);
 
@@ -66,16 +72,17 @@ async function modApplicationHandler(interaction) {
 				modApplicationEmbed.setTitle('Juxt Mod Application');
 				break;
 		}
+
 		modApplicationEmbed.setDescription(`<@${applyingMember.user.id}> has attempted a ${modType} moderator application. This user specified they are under the age of 18.`);
 		modApplicationEmbed.setImage('attachment://denied-banner.png');
 		modApplicationEmbed.setThumbnail('attachment://denied-icon.png');
 		modApplicationEmbed.setAuthor({
 			name: applyingMember.user.tag,
-			iconURL: applyingMember.user.avatarURL()
+			iconURL: applyingMember.user.avatarURL() ?? undefined
 		});
 		modApplicationEmbed.setFooter({
 			text: 'Pretendo Network',
-			iconURL: guild.iconURL()
+			iconURL: guild.iconURL() ?? undefined
 		});
 		modApplicationEmbed.setTimestamp(Date.now());
 
@@ -91,14 +98,11 @@ async function modApplicationHandler(interaction) {
 		return;
 	}
 
-	interaction.showModal(modApplicationModal, {
-		client: interaction.client,
-		interaction: interaction
-	});
+	interaction.showModal(modApplicationModal);
 }
 
 const command = new SlashCommandBuilder()
-	.setDefaultMemberPermissions(Discord.PermissionFlagsBits.SendMessages)
+	.setDefaultMemberPermissions(PermissionFlagsBits.SendMessages)
 	.setName('mod-application')
 	.setDescription('Apply for a position as a moderator.')
 	.addStringOption(option =>
@@ -121,9 +125,11 @@ const command = new SlashCommandBuilder()
 				{ name: 'No', value: 'no' }
 			));
 
-module.exports = {
+const handler: CommandHandler = {
 	name: command.name,
 	help: 'Displays a popup modal to apply for a moderator position.\n```\nUsage: /mod-application role 18-or-older\n```',
 	handler: modApplicationHandler,
 	deploy: command.toJSON()
 };
+
+export default handler;

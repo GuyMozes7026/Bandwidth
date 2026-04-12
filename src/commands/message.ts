@@ -1,19 +1,16 @@
-const Discord = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const { modal: sendMessageModal } = require('../modals/send-message');
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { ActionRowBuilder, AttachmentBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, TextInputBuilder, TextInputStyle } from 'discord.js';
+import sendMessageModalHandler from '../modals/send-message';
+import type { CommandHandler } from '@/types/general-types';
+import type { ChatInputCommandInteraction } from 'discord.js';
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function messageHandler(interaction) {
+const sendMessageModal = sendMessageModalHandler.modal;
+
+async function messageHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	const action = interaction.options.getString('action');
 
 	if (action === 'send') {
-		await interaction.showModal(sendMessageModal, {
-			client: interaction.client,
-			interaction: interaction
-		});
+		await interaction.showModal(sendMessageModal);
 	} else if (action === 'edit') {
 		const messageId = interaction.options.getString('message-id');
 
@@ -21,57 +18,54 @@ async function messageHandler(interaction) {
 			throw new Error('Message ID is required for this action');
 		}
 
-		const message = await interaction.channel.messages.fetch(messageId);
+		const message = await interaction.channel!.messages.fetch(messageId);
 
 		if (message.author.id !== interaction.client.user.id) {
 			throw new Error('Can only manage Bandwidth messages with this command');
 		}
 
-		const messageJSON = message.toJSON();
+		const messageJSON = message.toJSON() as Record<string, unknown>;
 
 		// Only take the properties we need
-		const messagePayload = {
+		const messagePayload = JSON.stringify({
 			content: messageJSON.content || null,
 			embeds: messageJSON.embeds || [],
 			attachments: messageJSON.attachments || [],
 			components: messageJSON.components || []
-		};
+		}, null, 4);
 
 		/*
 			Make these components here to keep them in the right order
 			and to set the default values
 		*/
 
-		const messageIdInput = new Discord.TextInputBuilder();
+		const messageIdInput = new TextInputBuilder();
 		messageIdInput.setCustomId('message-id');
 		messageIdInput.setLabel('Message ID (DO NOT CHANGE)');
-		messageIdInput.setStyle(Discord.TextInputStyle.Short);
+		messageIdInput.setStyle(TextInputStyle.Short);
 		messageIdInput.setValue(messageId);
 		messageIdInput.setRequired(true);
 
-		const payload = new Discord.TextInputBuilder();
+		const payload = new TextInputBuilder();
 		payload.setCustomId('payload');
-		payload.setStyle(Discord.TextInputStyle.Paragraph);
+		payload.setStyle(TextInputStyle.Paragraph);
 		payload.setLabel('Message Payload');
 		payload.setPlaceholder('http://discohook.org & https://discord.com/developers/docs/resources/channel#message-object for help');
-		payload.setValue(JSON.stringify(messagePayload, null, 4));
+		payload.setValue(messagePayload);
 		payload.setRequired(true);
 
-		const row1 = new Discord.ActionRowBuilder();
+		const row1 = new ActionRowBuilder<TextInputBuilder>();
 		row1.addComponents(messageIdInput);
 
-		const row2 = new Discord.ActionRowBuilder();
+		const row2 = new ActionRowBuilder<TextInputBuilder>();
 		row2.addComponents(payload);
 
-		const editMessageModal = new Discord.ModalBuilder();
+		const editMessageModal = new ModalBuilder();
 		editMessageModal.setCustomId('edit-message');
 		editMessageModal.setTitle('Edit message sent as Bandwidth');
 		editMessageModal.setComponents(row1, row2);
 
-		await interaction.showModal(editMessageModal, {
-			client: interaction.client,
-			interaction: interaction
-		});
+		await interaction.showModal(editMessageModal);
 	} else if (action === 'get-payload') {
 		const messageId = interaction.options.getString('message-id');
 
@@ -81,33 +75,33 @@ async function messageHandler(interaction) {
 			}
 		}
 
-		const message = await interaction.channel.messages.fetch(messageId);
+		const message = await interaction.channel!.messages.fetch(messageId);
 
-		const messageJSON = message.toJSON();
+		const messageJSON = message.toJSON() as Record<string, unknown>;
 
 		// Only take the properties we need
-		const messagePayload = {
+		const messagePayload = JSON.stringify({
 			content: messageJSON.content || null,
 			embeds: messageJSON.embeds || [],
 			attachments: messageJSON.attachments || [],
 			components: messageJSON.components || []
-		};
+		});
 
 		await interaction.reply({
 			content: 'Message Payload Attached',
 			files: [
-				new Discord.AttachmentBuilder(Buffer.from(JSON.stringify(messagePayload)), {
+				new AttachmentBuilder(Buffer.from(messagePayload), {
 					name: 'message-payload.json'
 				})
 			],
-			ephemeral: true
+			flags: MessageFlags.Ephemeral
 		});
 	}
 }
 
 const command = new SlashCommandBuilder();
 
-command.setDefaultMemberPermissions(Discord.PermissionFlagsBits.Administrator);
+command.setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 command.setName('message');
 command.setDescription('Send and manage Bandwidth messages');
 command.addStringOption((option) => {
@@ -131,8 +125,10 @@ command.addStringOption((option) => {
 	return option;
 });
 
-module.exports = {
+const handler: CommandHandler = {
 	name: command.name,
 	handler: messageHandler,
 	deploy: command.toJSON()
 };
+
+export default handler;

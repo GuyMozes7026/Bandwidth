@@ -1,70 +1,66 @@
-const Discord = require('discord.js');
-const { ContextMenuCommandBuilder } = require('@discordjs/builders');
-const { ApplicationCommandType } = require('discord-api-types/v10');
+import { ContextMenuCommandBuilder } from '@discordjs/builders';
+import { ActionRowBuilder, ApplicationCommandType, ModalBuilder, PermissionFlagsBits, TextInputBuilder, TextInputStyle } from 'discord.js';
+import type { ContextMenuHandler } from '@/types/general-types';
+import type { ContextMenuCommandInteraction } from 'discord.js';
 
-/**
- *
- * @param {Discord.ContextMenuInteraction} interaction
- */
-async function reportUserHandler(interaction) {
+async function reportUserHandler(interaction: ContextMenuCommandInteraction): Promise<void> {
 	const { targetId } = interaction;
 
-	const message = await interaction.channel.messages.fetch(targetId);
+	const message = await interaction.channel!.messages.fetch(targetId);
 
 	if (message.author.id !== interaction.client.user.id) {
 		throw new Error('Can only manage Bandwidth messages with this command');
 	}
 
-	const messageJSON = message.toJSON();
+	const messageJSON = message.toJSON() as Record<string, unknown>;
 
 	// Only take the properties we need
-	const messagePayload = {
+	const messagePayload = JSON.stringify({
 		content: messageJSON.content || null,
 		embeds: messageJSON.embeds || [],
 		attachments: messageJSON.attachments || [],
 		components: messageJSON.components || []
-	};
+	}, null, 4);
 
-	const messageIdInput = new Discord.TextInputBuilder();
+	const messageIdInput = new TextInputBuilder();
 	messageIdInput.setCustomId('message-id');
 	messageIdInput.setLabel('Message ID (DO NOT CHANGE)');
-	messageIdInput.setStyle(Discord.TextInputStyle.Short);
+	messageIdInput.setStyle(TextInputStyle.Short);
 	messageIdInput.setValue(targetId);
 	messageIdInput.setRequired(true);
 
-	const payload = new Discord.TextInputBuilder();
+	const payload = new TextInputBuilder();
 	payload.setCustomId('payload');
-	payload.setStyle(Discord.TextInputStyle.Paragraph);
+	payload.setStyle(TextInputStyle.Paragraph);
 	payload.setLabel('Message Payload');
 	payload.setPlaceholder('http://discohook.org & https://discord.com/developers/docs/resources/channel#message-object for help');
-	payload.setValue(JSON.stringify(messagePayload, null, 4));
+	payload.setValue(messagePayload);
 	payload.setRequired(true);
 
-	const row1 = new Discord.ActionRowBuilder();
+	const row1 = new ActionRowBuilder<TextInputBuilder>();
 	row1.addComponents(messageIdInput);
 
-	const row2 = new Discord.ActionRowBuilder();
+	const row2 = new ActionRowBuilder<TextInputBuilder>();
 	row2.addComponents(payload);
 
-	const editMessageModal = new Discord.ModalBuilder();
+	const editMessageModal = new ModalBuilder();
 	editMessageModal.setCustomId('edit-message');
 	editMessageModal.setTitle('Edit message sent as Bandwidth');
 	editMessageModal.setComponents(row1, row2);
 
-	await interaction.showModal(editMessageModal, {
-		client: interaction.client,
-		interaction: interaction
-	});
+	await interaction.showModal(editMessageModal);
 }
 
 const contextMenu = new ContextMenuCommandBuilder();
 
-contextMenu.setDefaultMemberPermissions(Discord.PermissionFlagsBits.Administrator);
+contextMenu.setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 contextMenu.setName('Edit Bandwidth Message');
 contextMenu.setType(ApplicationCommandType.Message);
 
-module.exports = {
+const handler: ContextMenuHandler = {
 	name: contextMenu.name,
 	handler: reportUserHandler,
 	deploy: contextMenu.toJSON()
 };
+
+export default handler;

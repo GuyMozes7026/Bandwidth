@@ -1,32 +1,30 @@
-const Discord = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+import { EmbedBuilder, SlashCommandBuilder } from '@discordjs/builders';
+import { MessageFlags, PermissionFlagsBits } from 'discord.js';
+import type { CommandHandler } from '@/types/general-types';
+import type { ChatInputCommandInteraction } from 'discord.js';
 
-function hasSendMessagesPermission(permission) {
-	return BigInt(permission) & Discord.PermissionFlagsBits.SendMessages;
+function hasSendMessagesPermission(permission: string): bigint {
+	return BigInt(permission) & PermissionFlagsBits.SendMessages;
 }
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function helpHandler(interaction) {
+async function helpHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	await interaction.deferReply({
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 
 	const commandName = interaction.options.getString('command');
 
-	const helpEmbed = new Discord.EmbedBuilder();
+	const helpEmbed = new EmbedBuilder();
 	helpEmbed.setColor(0x287E29);
 	helpEmbed.setTitle('Pretendo Network Help');
 	helpEmbed.setFooter({
 		text: 'Pretendo Network',
-		iconURL: interaction.guild.iconURL()
+		iconURL: interaction.guild!.iconURL() ?? undefined
 	});
 
 	if (!commandName) {
-		const commandNames = [...interaction.client.commands.filter(command => hasSendMessagesPermission(command.deploy.default_member_permissions)).keys()];
-		const contextMenuNames = [...interaction.client.contextMenus.filter(command => hasSendMessagesPermission(command.deploy.default_member_permissions)).keys()];
+		const commandNames = [...interaction.client.commands.filter(command => hasSendMessagesPermission(command.deploy.default_member_permissions!)).keys()];
+		const contextMenuNames = [...interaction.client.contextMenus.filter(command => hasSendMessagesPermission(command.deploy.default_member_permissions!)).keys()];
 
 		helpEmbed.setDescription('To get detailed information about a command, use `/help <command name>` or `/<command name>` to check the commands description\n\nAll commands are Discord application commands with ephemeral (only visible to you) responses. Context Menu commands are visible via right clicking on a message or user and navigating to `Apps > <command name>`');
 		helpEmbed.setFields([
@@ -42,25 +40,29 @@ async function helpHandler(interaction) {
 			}
 		]);
 	} else {
-		const [collection, key] = commandName.split(':');
+		const [collection, key] = commandName.split(':') as ['commands' | 'contextMenus', string];
 
-		helpEmbed.setFields([
-			{
-				name: key,
-				value: interaction.client[collection].get(key).help
-			}
-		]);
+		const commandHandler = interaction.client[collection].get(key);
+
+		if (commandHandler?.help) {
+			helpEmbed.setFields([
+				{
+					name: key,
+					value: commandHandler.help
+				}
+			]);
+		}
 	}
 
 	await interaction.followUp({
 		embeds: [helpEmbed],
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 }
 
 const command = new SlashCommandBuilder();
 
-command.setDefaultMemberPermissions(Discord.PermissionFlagsBits.SendMessages);
+command.setDefaultMemberPermissions(PermissionFlagsBits.SendMessages);
 command.setName('help');
 command.setDescription('Get help');
 command.addStringOption((option) => {
@@ -79,9 +81,11 @@ command.addStringOption((option) => {
 	return option;
 });
 
-module.exports = {
+const handler: CommandHandler = {
 	name: command.name,
 	help: 'Get detailed help about the server and commands.\n```\nUsage: /help <command>\n```',
 	handler: helpHandler,
 	deploy: command.toJSON()
 };
+
+export default handler;

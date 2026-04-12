@@ -1,31 +1,33 @@
-const path = require('node:path');
-const Discord = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const database = require('../database');
+import path from 'node:path';
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { MessageFlags, PermissionFlagsBits } from 'discord.js';
+import { getGuildSetting } from '@/database';
+import type { Attachment, ChatInputCommandInteraction, GuildMember } from 'discord.js';
+import type { CommandHandler } from '@/types/general-types';
 
 const HOKAKU_CAFE_DEFAULT_PCAP_NAME_REGEX = /\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.(?:pcapng|pcap)/;
 const HOKAKU_CAFE_BIN_NAME_REGEX = /nexServiceToken-\d{10}-[\dA-f]{8}\.bin/;
 const HOKAKU_CTR_DEFAULT_PCAP_NAME_REGEX = /\d{6}_\d{6}\.(?:pcapng|pcap)/;
 const MITMPROXY_NINTENDO_DEFAULT_NAME_REGEX = /(?:wiiu|3ds)-latest\.har/;
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function uploadNetworkDumpHandler(interaction) {
+interface NetworkDumpResult {
+	attachments: Attachment[];
+	message: string;
+}
+
+async function uploadNetworkDumpHandler(interaction: ChatInputCommandInteraction): Promise<void> {
 	await interaction.deferReply({
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 
 	const subcommand = interaction.options.getSubcommand();
-	let result;
+	let result: NetworkDumpResult | null;
 
 	if (subcommand !== 'boss-database-wiiu' && subcommand !== 'boss-database-3ds') {
-		const description = interaction.options.getString('description');
+		const description = interaction.options.getString('description')!;
 		if (description.trim().length < 10) {
 			await interaction.editReply({
-				content: 'Please use a longer description',
-				ephemeral: true
+				content: 'Please use a longer description'
 			});
 
 			return;
@@ -59,13 +61,12 @@ async function uploadNetworkDumpHandler(interaction) {
 		return;
 	}
 
-	const uploadedDumpsChannelId = await database.getGuildSetting(interaction.guildId, 'uploaded_network_dumps_channel_id');
-	const uploadedDumpsChannel = interaction.guild.channels.cache.get(uploadedDumpsChannelId);
+	const uploadedDumpsChannelId = await getGuildSetting(interaction.guildId!, 'uploaded_network_dumps_channel_id');
+	const uploadedDumpsChannel = interaction.guild!.channels.cache.get(uploadedDumpsChannelId);
 
-	if (!uploadedDumpsChannel) {
+	if (!uploadedDumpsChannel || !uploadedDumpsChannel.isSendable()) {
 		await interaction.editReply({
-			content: 'The channel to submit them to has not been found. Please contact a developer immediately.',
-			ephemeral: true
+			content: 'The channel to submit them to has not been found. Please contact a developer immediately.'
 		});
 
 		return;
@@ -81,64 +82,54 @@ async function uploadNetworkDumpHandler(interaction) {
 		});
 	} catch (error) {
 		await interaction.editReply({
-			content: `There was an error uploading your dumps. Please contact a developer immediately.\n\n${error}`,
-			ephemeral: true
+			content: `There was an error uploading your dumps. Please contact a developer immediately.\n\n${error}`
 		});
 
 		return;
 	}
 
 	await interaction.editReply({
-		content: 'Thank you for the submission!',
-		ephemeral: true
+		content: 'Thank you for the submission!'
 	});
 }
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function hokakuCafeHandler(interaction) {
-	const dump = interaction.options.getAttachment('dump');
-	const bin = interaction.options.getAttachment('bin');
+async function hokakuCafeHandler(interaction: ChatInputCommandInteraction): Promise<NetworkDumpResult | null> {
+	const dump = interaction.options.getAttachment('dump')!;
+	const bin = interaction.options.getAttachment('bin')!;
 	const description = interaction.options.getString('description');
 
 	const dumpFileExtension = path.extname(dump.name.toLowerCase());
 
 	if (dumpFileExtension !== '.pcap' && dumpFileExtension !== '.pcapng') {
 		await interaction.editReply({
-			content: `Invalid dump file type. Expected pcap/pcapng, got ${dumpFileExtension}`,
-			ephemeral: true
+			content: `Invalid dump file type. Expected pcap/pcapng, got ${dumpFileExtension}`
 		});
 
-		return;
+		return null;
 	}
 
 	if (dump.name.match(HOKAKU_CAFE_DEFAULT_PCAP_NAME_REGEX)) {
 		await interaction.editReply({
-			content: 'Uses default HokakuCafe pcap file name. Please change the name to something more descriptive',
-			ephemeral: true
+			content: 'Uses default HokakuCafe pcap file name. Please change the name to something more descriptive'
 		});
 
-		return;
+		return null;
 	}
 
 	if (!bin.name.match(HOKAKU_CAFE_BIN_NAME_REGEX)) {
 		await interaction.editReply({
-			content: 'BIN file appears to be invalid. Name should be in the format "nexServiceToken-1234567890-12345678.bin", where "1234567890" is your NEX username (PID) and "12345678" is the last 8 characters of the title ID for the title',
-			ephemeral: true
+			content: 'BIN file appears to be invalid. Name should be in the format "nexServiceToken-1234567890-12345678.bin", where "1234567890" is your NEX username (PID) and "12345678" is the last 8 characters of the title ID for the title'
 		});
 
-		return;
+		return null;
 	}
 
 	if (bin.size !== 604) {
 		await interaction.editReply({
-			content: `BIN file appears to be invalid. Bad size. Should be 604 bytes, got ${bin.size} bytes`,
-			ephemeral: true
+			content: `BIN file appears to be invalid. Bad size. Should be 604 bytes, got ${bin.size} bytes`
 		});
 
-		return;
+		return null;
 	}
 
 	return {
@@ -146,90 +137,74 @@ async function hokakuCafeHandler(interaction) {
 			dump,
 			bin
 		],
-		message: `<@${interaction.member.id}> Uploaded a HokakuCafe dump: \n\n${description}`
+		message: `<@${(interaction.member as GuildMember).id}> Uploaded a HokakuCafe dump: \n\n${description}`
 	};
 }
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function hokakuCTRHandler(interaction) {
-	const dump = interaction.options.getAttachment('dump');
+async function hokakuCTRHandler(interaction: ChatInputCommandInteraction): Promise<NetworkDumpResult | null> {
+	const dump = interaction.options.getAttachment('dump')!;
 	const description = interaction.options.getString('description');
 
 	const dumpFileExtension = path.extname(dump.name.toLowerCase());
 
 	if (dumpFileExtension !== '.pcap') {
 		await interaction.editReply({
-			content: `Invalid dump file type. Expected pcap, got ${dumpFileExtension}`,
-			ephemeral: true
+			content: `Invalid dump file type. Expected pcap, got ${dumpFileExtension}`
 		});
 
-		return;
+		return null;
 	}
 
 	if (dump.name.match(HOKAKU_CTR_DEFAULT_PCAP_NAME_REGEX)) {
 		await interaction.editReply({
-			content: 'Uses default HokakuCTR pcap file name. Please change the name to something more descriptive',
-			ephemeral: true
+			content: 'Uses default HokakuCTR pcap file name. Please change the name to something more descriptive'
 		});
 
-		return;
+		return null;
 	}
 
 	return {
 		attachments: [
 			dump
 		],
-		message: `<@${interaction.member.id}> Uploaded a HokakuCTR dump: \n\n${description}`
+		message: `<@${(interaction.member as GuildMember).id}> Uploaded a HokakuCTR dump: \n\n${description}`
 	};
 }
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function hokakuPCAPHandler(interaction) {
-	const dump = interaction.options.getAttachment('dump');
+async function hokakuPCAPHandler(interaction: ChatInputCommandInteraction): Promise<NetworkDumpResult | null> {
+	const dump = interaction.options.getAttachment('dump')!;
 	const username = interaction.options.getInteger('username');
-	const password = interaction.options.getString('password');
+	const password = interaction.options.getString('password')!;
 	const description = interaction.options.getString('description');
 
 	const dumpFileExtension = path.extname(dump.name.toLowerCase());
 
 	if (dumpFileExtension !== '.pcap' && dumpFileExtension !== '.pcapng') {
 		await interaction.editReply({
-			content: `Invalid dump file type. Expected pcap/pcapng, got ${dumpFileExtension}`,
-			ephemeral: true
+			content: `Invalid dump file type. Expected pcap/pcapng, got ${dumpFileExtension}`
 		});
 
-		return;
+		return null;
 	}
 
 	if (password.length !== 16) {
 		await interaction.editReply({
-			content: 'Invalid password size. Passwords are 16 characters long',
-			ephemeral: true
+			content: 'Invalid password size. Passwords are 16 characters long'
 		});
 
-		return;
+		return null;
 	}
 
 	return {
 		attachments: [
 			dump
 		],
-		message: `<@${interaction.member.id}> Uploaded a WireShark PCAP: ${username}:${password}\n\n${description}`
+		message: `<@${(interaction.member as GuildMember).id}> Uploaded a WireShark PCAP: ${username}:${password}\n\n${description}`
 	};
 }
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function proxyHandler(interaction) {
-	const dump = interaction.options.getAttachment('dump');
+async function proxyHandler(interaction: ChatInputCommandInteraction): Promise<NetworkDumpResult | null> {
+	const dump = interaction.options.getAttachment('dump')!;
 	const description = interaction.options.getString('description');
 
 	const dumpFileExtension = path.extname(dump.name.toLowerCase());
@@ -242,81 +217,69 @@ async function proxyHandler(interaction) {
 		dumpFileExtension !== '.saz' // * Fiddler session
 	) {
 		await interaction.editReply({
-			content: `Invalid dump file type. Expected har/chls/chlsj/chlsx/saz, got ${dumpFileExtension}`,
-			ephemeral: true
+			content: `Invalid dump file type. Expected har/chls/chlsj/chlsx/saz, got ${dumpFileExtension}`
 		});
 
-		return;
+		return null;
 	}
 
 	if (dump.name.match(MITMPROXY_NINTENDO_DEFAULT_NAME_REGEX)) {
 		await interaction.editReply({
-			content: 'Uses default mitmproxy-nintendo capture name. Please change the name to something more descriptive',
-			ephemeral: true
+			content: 'Uses default mitmproxy-nintendo capture name. Please change the name to something more descriptive'
 		});
 
-		return;
+		return null;
 	}
 
 	return {
 		attachments: [
 			dump
 		],
-		message: `<@${interaction.member.id}> Uploaded a HTTP proxy dump: \n\n${description}`
+		message: `<@${(interaction.member as GuildMember).id}> Uploaded a HTTP proxy dump: \n\n${description}`
 	};
 }
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function bossTaskDatabaseWiiUHandler(interaction) {
-	const database = interaction.options.getAttachment('task-db');
+async function bossTaskDatabaseWiiUHandler(interaction: ChatInputCommandInteraction): Promise<NetworkDumpResult | null> {
+	const database = interaction.options.getAttachment('task-db')!;
 
 	if (database.name !== 'task.db') {
 		await interaction.editReply({
-			content: `Invalid task database. Expected task.db, got ${database.name}`,
-			ephemeral: true
+			content: `Invalid task  Expected task.db, got ${database.name}`
 		});
 
-		return;
+		return null;
 	}
 
 	return {
 		attachments: [
 			database
 		],
-		message: `<@${interaction.member.id}> Uploaded a Wii U BOSS task database`
+		message: `<@${(interaction.member as GuildMember).id}> Uploaded a Wii U BOSS task database`
 	};
 }
 
-/**
- *
- * @param {Discord.CommandInteraction} interaction
- */
-async function bossTaskDatabase3DSHandler(interaction) {
-	const partition = interaction.options.getAttachment('partition');
+async function bossTaskDatabase3DSHandler(interaction: ChatInputCommandInteraction): Promise<NetworkDumpResult | null> {
+	const partition = interaction.options.getAttachment('partition')!;
 
 	if (!partition.name.startsWith('partition') || partition.name.startsWith('.bin')) {
 		await interaction.editReply({
-			content: `Invalid save partition. 3DS BOSS save partition names start with "partition", followed by some letter (usually A), and use the .bin extension. Got ${partition.name}`,
-			ephemeral: true
+			content: `Invalid save partition. 3DS BOSS save partition names start with "partition", followed by some letter (usually A), and use the .bin extension. Got ${partition.name}`
 		});
 
-		return;
+		return null;
 	}
 
 	return {
 		attachments: [
 			partition
 		],
-		message: `<@${interaction.member.id}> Uploaded a 3DS BOSS task database`
+		message: `<@${(interaction.member as GuildMember).id}> Uploaded a 3DS BOSS task database`
 	};
 }
 
 const command = new SlashCommandBuilder();
 
-command.setDefaultMemberPermissions(Discord.PermissionFlagsBits.SendMessages);
+command.setDefaultMemberPermissions(PermissionFlagsBits.SendMessages);
 command.setName('upload-network-dump');
 command.setDescription('Upload network dumps');
 command.addSubcommand((cmd) => {
@@ -447,9 +410,11 @@ command.addSubcommand((cmd) => {
 	return cmd;
 });
 
-module.exports = {
+const handler: CommandHandler = {
 	name: command.name,
 	help: 'Upload network dump for development use',
 	handler: uploadNetworkDumpHandler,
 	deploy: command.toJSON()
 };
+
+export default handler;
