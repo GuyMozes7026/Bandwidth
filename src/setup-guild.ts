@@ -1,10 +1,10 @@
 import { PermissionFlagsBits } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v10';
-import timedUtils from '@/utils/timed';
+import { updateMemberCountChannels } from '@/utils/timed';
 import { initGuild } from '@/database';
 import { bot_token as botToken } from '@/../config.json';
-import type { APIApplicationCommand, Guild } from 'discord.js';
+import type { Guild, RESTPostAPIBaseApplicationCommandsJSONBody } from 'discord.js';
 
 const rest = new REST({ version: '10' }).setToken(botToken);
 
@@ -19,21 +19,21 @@ async function setupGuild(guild: Guild): Promise<void> {
 	await deployCommandsToGuild(guild);
 
 	try {
-		await timedUtils.updateMemberCountChannels(guild);
+		await updateMemberCountChannels(guild);
 	} catch {
 		// we dont care if it fails on setup, it'll sync again on join
 	}
 
 	// Set up our timer for refreshing the member count (5 minutes)
 	setInterval(async function () {
-		await timedUtils.updateMemberCountChannels(guild);
+		await updateMemberCountChannels(guild);
 	}, 300000);
 
 	await initGuild(guild.id);
 }
 
 async function deployCommandsToGuild(guild: Guild): Promise<void> {
-	const deploy: APIApplicationCommand[] = [];
+	const deploy: RESTPostAPIBaseApplicationCommandsJSONBody[] = [];
 
 	guild.client.commands.forEach((command) => {
 		deploy.push(command.deploy);
