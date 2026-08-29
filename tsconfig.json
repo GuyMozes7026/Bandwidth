@@ -6,6 +6,7 @@
 		"esModuleInterop": true,
 		"moduleResolution": "node10",
 		"baseUrl": "src",
+		"rootDir": "src",
 		"outDir": "dist",
 		"allowJs": true,
 		"target": "es2022",
