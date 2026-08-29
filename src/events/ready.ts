@@ -40,7 +40,7 @@ export default async function readyHandler(client: Client): Promise<void> {
 	_setRandomStatus(client);
 
 	// set random status every 10 min
-	setInterval(async function () {
+	setInterval(function () {
 		_setRandomStatus(client);
 	}, 10 * 60 * 1000);
 }
@@ -76,7 +76,7 @@ const statuses = [
 	'160-0103 w/ a side of Hynix chips'
 ];
 
-async function _setRandomStatus(client: Client): Promise<void> {
+function _setRandomStatus(client: Client): void {
 	client?.user?.setPresence({ activities: [{ name: statuses[Math.floor(Math.random() * statuses.length)], type: ActivityType.Custom }], status: PresenceUpdateStatus.Online });
 }
 
