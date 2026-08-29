@@ -1,5 +1,5 @@
 import { ContextMenuCommandBuilder } from '@discordjs/builders';
-import { ApplicationCommandType, PermissionFlagsBits } from 'discord.js';
+import { ApplicationCommandType, MessageFlags, PermissionFlagsBits } from 'discord.js';
 import { closePoll } from '@/utils/polls';
 import type { ContextMenuCommandInteraction } from 'discord.js';
 import type { ContextMenuHandler } from '@/types/general-types';
@@ -13,7 +13,7 @@ async function closePollHandler(interaction: ContextMenuCommandInteraction): Pro
 
 	await interaction.reply({
 		content: 'Poll closed!',
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 }
 

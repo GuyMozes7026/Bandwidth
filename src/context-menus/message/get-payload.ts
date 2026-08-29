@@ -1,5 +1,5 @@
 import { ContextMenuCommandBuilder } from '@discordjs/builders';
-import { ApplicationCommandType, AttachmentBuilder, PermissionFlagsBits } from 'discord.js';
+import { ApplicationCommandType, AttachmentBuilder, MessageFlags, PermissionFlagsBits } from 'discord.js';
 import type { ContextMenuHandler } from '@/types/general-types';
 import type { ContextMenuCommandInteraction } from 'discord.js';
 
@@ -24,7 +24,7 @@ async function reportUserHandler(interaction: ContextMenuCommandInteraction): Pr
 				name: 'message-payload.json'
 			})
 		],
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 }
 

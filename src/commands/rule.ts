@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { ActionRowBuilder, PermissionFlagsBits, StringSelectMenuBuilder } from 'discord.js';
+import { ActionRowBuilder, MessageFlags, PermissionFlagsBits, StringSelectMenuBuilder } from 'discord.js';
 import { getAllRules } from '@/database';
 import updateRuleModalHandler from '../modals/update-rule';
 import type { CommandHandler } from '@/types/general-types';
@@ -22,7 +22,7 @@ async function rulesHandler(interaction: ChatInputCommandInteraction): Promise<v
 		if (rules.length === 0) {
 			await interaction.reply({
 				content: 'There are no rules set. Use /rule create to make some.',
-				ephemeral: true
+				flags: MessageFlags.Ephemeral
 			});
 			return;
 		}
@@ -44,7 +44,7 @@ async function rulesHandler(interaction: ChatInputCommandInteraction): Promise<v
 		await interaction.reply({
 			content: `Select a rule to ${interaction.options.getSubcommand()}...`,
 			components: [row],
-			ephemeral: true
+			flags: MessageFlags.Ephemeral
 		});
 
 		return;

@@ -33,7 +33,7 @@ async function roleSelfAssignHandler(interaction: StringSelectMenuInteraction): 
 	if (!role) {
 		await interaction.followUp({
 			content: 'Unable to find the requested role. Contact an admin as soon as possible',
-			ephemeral: true
+			flags: MessageFlags.Ephemeral
 		});
 
 		return;
@@ -58,7 +58,7 @@ async function roleSelfAssignHandler(interaction: StringSelectMenuInteraction): 
 
 	await interaction.followUp({
 		content: `Toggling role ${role.name} [${hasRole ? 'REMOVED' : 'ADDED'}]!`,
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 }
 

@@ -1,5 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ContextMenuCommandBuilder, EmbedBuilder } from '@discordjs/builders';
-import { ApplicationCommandType, ButtonStyle, PermissionFlagsBits } from 'discord.js';
+import { ApplicationCommandType, ButtonStyle, MessageFlags, PermissionFlagsBits } from 'discord.js';
 import { getGuildSetting } from '@/database';
 import type { ContextMenuCommandInteraction, GuildChannel, GuildMember } from 'discord.js';
 import type { ContextMenuHandler } from '@/types/general-types';
@@ -89,7 +89,7 @@ async function warnPiracyHandler(interaction: ContextMenuCommandInteraction): Pr
 
 	await interaction.reply({
 		content: 'Message Flagged',
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 }
 

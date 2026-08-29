@@ -1,3 +1,4 @@
+import { MessageFlags } from 'discord.js';
 import { isInteractionOnCooldown, beginCooldown } from '@/utils/cooldown';
 import type { GuildMember, ModalSubmitInteraction } from 'discord.js';
 
@@ -23,7 +24,7 @@ export default async function modalSubmitHandler(interaction: ModalSubmitInterac
 		await interaction.reply(
 			{
 				embeds: [cooldown],
-				ephemeral: true
+				flags: MessageFlags.Ephemeral
 			}
 		);
 	}

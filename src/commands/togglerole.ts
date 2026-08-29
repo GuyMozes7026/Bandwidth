@@ -17,7 +17,7 @@ async function toggleroleHandler(interaction: ChatInputCommandInteraction): Prom
 	if (!role) {
 		await interaction.followUp({
 			content: 'Unable to find the requested role. Contact and admin as soon as possible',
-			ephemeral: true
+			flags: MessageFlags.Ephemeral
 		});
 
 		return;
@@ -33,7 +33,7 @@ async function toggleroleHandler(interaction: ChatInputCommandInteraction): Prom
 
 	await interaction.followUp({
 		content: `Toggling role ${role.name} [${hasRole ? 'REMOVED' : 'ADDED'}]!`,
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 }
 

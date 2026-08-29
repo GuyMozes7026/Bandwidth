@@ -1,4 +1,4 @@
-import { ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import { checkAutomaticHelpDisabled, disableAutomaticHelp } from '@/database';
 import type { ButtonHandler } from '@/types/general-types';
 import type { APIButtonComponentWithCustomId, ButtonInteraction, GuildMember } from 'discord.js';
@@ -10,7 +10,7 @@ disableNLPButton.setStyle(ButtonStyle.Danger);
 
 async function disableNLPHandler(interaction: ButtonInteraction): Promise<void> {
 	await interaction.deferReply({
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 
 	const guildId = interaction.guildId!;

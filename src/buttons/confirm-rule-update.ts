@@ -1,5 +1,6 @@
-import { ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import { createRule, updateRule } from '@/database';
+import type { ButtonHandler } from '@/types/general-types';
 import type { APIButtonComponentWithCustomId, ButtonInteraction } from 'discord.js';
 
 const confirmRuleUpdateButton = new ButtonBuilder();
@@ -23,12 +24,14 @@ async function confirmRuleUpdateHandler(interaction: ButtonInteraction): Promise
 
 	interaction.reply({
 		content: 'Rule updated!',
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 }
 
-module.exports = {
+const handler: ButtonHandler = {
 	name: (confirmRuleUpdateButton.data as APIButtonComponentWithCustomId).custom_id,
 	button: confirmRuleUpdateButton,
 	handler: confirmRuleUpdateHandler
 };
+
+export default handler;

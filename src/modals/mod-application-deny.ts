@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, EmbedBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { getGuildSetting } from '@/database';
 import type { ModalHandler } from '@/types/general-types';
 import type { GuildMemberRoleManager, ModalSubmitInteraction, ActionRow, ButtonComponent } from 'discord.js';
@@ -20,7 +20,7 @@ denyModApplicationModal.addComponents(actionRow);
 
 async function denyModApplicationHandler(interaction: ModalSubmitInteraction): Promise<void> {
 	await interaction.deferReply({
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 
 	const adminRoleId = await getGuildSetting(interaction.guildId!, 'admin_role_id');

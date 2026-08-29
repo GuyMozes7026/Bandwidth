@@ -1,4 +1,4 @@
-import { ButtonBuilder, ButtonStyle, ActionRowBuilder, EmbedBuilder } from 'discord.js';
+import { ButtonBuilder, ButtonStyle, ActionRowBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { getAllRules } from '@/database';
 import verifyCompleteButtonHandler from './verify-complete';
 import type { ButtonHandler } from '@/types/general-types';
@@ -32,7 +32,7 @@ async function viewRulesHandler(interaction: ButtonInteraction): Promise<void> {
 		await interaction.reply({
 			content: 'No rules are set, press Verify to continue.',
 			components: [row],
-			ephemeral: true
+			flags: MessageFlags.Ephemeral
 		});
 		return;
 	}
@@ -46,7 +46,7 @@ async function viewRulesHandler(interaction: ButtonInteraction): Promise<void> {
 		await interaction.reply({
 			embeds: [ruleEmbed],
 			components: [row],
-			ephemeral: true
+			flags: MessageFlags.Ephemeral
 		});
 	} else {
 		await interaction.update({

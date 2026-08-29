@@ -1,4 +1,4 @@
-import { PermissionFlagsBits } from 'discord.js';
+import { MessageFlags, PermissionFlagsBits } from 'discord.js';
 import { EmbedBuilder, SlashCommandBuilder } from '@discordjs/builders';
 import { getGuildSetting } from '@/database';
 import modApplicationModalHandler from '../modals/mod-application';
@@ -15,7 +15,7 @@ async function modApplicationHandler(interaction: ChatInputCommandInteraction): 
 	if (interaction.options.get('18-or-older')!.value === 'no') {
 		await interaction.reply({
 			content: 'We are not accepting applications from individuals under the age of 18.',
-			ephemeral: true,
+			flags: MessageFlags.Ephemeral,
 			allowedMentions: {
 				parse: [] // dont allow tagging anything
 			}

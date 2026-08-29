@@ -33,4 +33,4 @@ async function modalSubmitHandler(interaction: ModalSubmitInteraction): Promise<
 	}
 }
 
-module.exports = modalSubmitHandler;
+export default modalSubmitHandler;

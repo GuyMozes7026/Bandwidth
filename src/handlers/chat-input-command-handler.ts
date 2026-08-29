@@ -1,3 +1,4 @@
+import { MessageFlags } from 'discord.js';
 import { isInteractionOnCooldown, beginCooldown } from '@/utils/cooldown';
 import type { ChatInputCommandInteraction, GuildMember } from 'discord.js';
 
@@ -22,7 +23,7 @@ export default async function chatInputCommandHandler(interaction: ChatInputComm
 		await interaction.reply(
 			{
 				embeds: [cooldown],
-				ephemeral: true
+				flags: MessageFlags.Ephemeral
 			}
 		);
 	}

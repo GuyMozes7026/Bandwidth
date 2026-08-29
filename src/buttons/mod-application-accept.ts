@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags } from 'discord.js';
 import { getGuildSetting } from '@/database';
 import type { ButtonHandler } from '@/types/general-types';
 import type { ActionRow, APIButtonComponentWithCustomId, ButtonComponent, ButtonInteraction, GuildMember } from 'discord.js';
@@ -10,7 +10,7 @@ acceptButton.setStyle(ButtonStyle.Success);
 
 async function modApplicationAcceptHandler(interaction: ButtonInteraction): Promise<void> {
 	await interaction.deferReply({
-		ephemeral: true
+		flags: MessageFlags.Ephemeral
 	});
 
 	const adminRoleId = await getGuildSetting(interaction.guildId!, 'admin_role_id');
