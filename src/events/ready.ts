@@ -1,5 +1,5 @@
 import path from 'path';
-import { sync as globSync } from 'glob';
+import { glob } from 'glob';
 import { ActivityType, PresenceUpdateStatus } from 'discord.js';
 import { connect } from '@/database';
 import { updatePolls } from '@/utils/polls';
@@ -81,7 +81,7 @@ async function _setRandomStatus(client: Client): Promise<void> {
 }
 
 async function loadBotHandlersCollection(name: string, collection: Collection<string, BaseHandler>): Promise<void> {
-	const files = globSync(`${__dirname}/../${name}/**/*.[jt]s`);
+	const files = await glob(`${__dirname}/../${name}/**/*.[jt]s`);
 
 	for (const file of files) {
 		const handler = await import(path.resolve(file)) as BaseHandler;
