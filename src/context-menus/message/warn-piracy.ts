@@ -1,5 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ContextMenuCommandBuilder, EmbedBuilder } from '@discordjs/builders';
-import { ApplicationCommandType, ButtonStyle, MessageFlags, PermissionFlagsBits } from 'discord.js';
+import { ActionRowBuilder, ApplicationCommandType, ButtonBuilder, ButtonStyle, ContextMenuCommandBuilder, EmbedBuilder, MessageFlags, PermissionFlagsBits } from 'discord.js';
 import { getGuildSetting } from '@/database';
 import type { ContextMenuCommandInteraction, GuildChannel, GuildMember } from 'discord.js';
 import type { ContextMenuHandler } from '@/types/general-types';
@@ -76,7 +75,7 @@ async function warnPiracyHandler(interaction: ContextMenuCommandInteraction): Pr
 
 	jumpButton.setLabel('Jump!');
 	jumpButton.setStyle(ButtonStyle.Link);
-	jumpButton.setEmoji({ name: '📨' });
+	jumpButton.setEmoji('📨');
 	jumpButton.setURL(message.url);
 
 	const row = new ActionRowBuilder<ButtonBuilder>();

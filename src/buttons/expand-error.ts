@@ -9,7 +9,7 @@ expandErrorButton.setLabel('Expand Error Info');
 expandErrorButton.setStyle(ButtonStyle.Primary);
 
 async function expandErrorHandler(interaction: ButtonInteraction): Promise<void> {
-	interaction.deferUpdate();
+	await interaction.deferUpdate();
 
 	const { message } = interaction;
 	const ogEmbed = message.embeds[0];
@@ -19,7 +19,7 @@ async function expandErrorHandler(interaction: ButtonInteraction): Promise<void>
 	const errorCodeEmbed = checkForErrorCode(message.embeds[0].title!)!;
 
 	// Swap the embed out, while removing our button component
-	message.edit({
+	await message.edit({
 		embeds: [errorCodeEmbed],
 		components: []
 	});
@@ -28,7 +28,7 @@ async function expandErrorHandler(interaction: ButtonInteraction): Promise<void>
 	await new Promise(r => setTimeout(r, 45000));
 
 	// Re-collapse the message
-	message.edit({
+	await message.edit({
 		embeds: [ogEmbed],
 		components: [ogButton]
 	});

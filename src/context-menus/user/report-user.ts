@@ -31,7 +31,7 @@ async function reportUserHandler(interaction: ContextMenuCommandInteraction): Pr
 	reportUserModal.setCustomId(`${reportUserModal.data.custom_id}-${targetId}`);
 	reportUserModal.setTitle(`Reporting ${targetMember.user.tag}`);
 
-	interaction.showModal(reportUserModal);
+	await interaction.showModal(reportUserModal);
 }
 
 const contextMenu = new ContextMenuCommandBuilder();

@@ -9,11 +9,11 @@ verifyCompleteButton.setLabel('Verify');
 verifyCompleteButton.setStyle(ButtonStyle.Success);
 
 async function verifyCompleteHandler(interaction: ButtonInteraction): Promise<void> {
-	interaction.deferUpdate();
+	await interaction.deferUpdate();
 
 	try {
 		const role = interaction.guild!.roles.cache.get(await getGuildSetting(interaction.guildId!, 'unverified_role_id'))!;
-		(interaction.member as GuildMember).roles.remove(role);
+		await (interaction.member as GuildMember).roles.remove(role);
 	} catch {
 		// Do nothing, role is already removed
 	}

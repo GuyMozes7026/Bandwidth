@@ -4,7 +4,7 @@ import sqlite3 from 'sqlite3';
 import sqlite from 'sqlite';
 import { db_path } from '@/../config.json';
 import type { PollInfo } from '@/types/general-types';
-import type { CommandCooldown, Poll, Rule, ServerSettings } from '@/types/db-types';
+import type { CommandCooldown, Poll, PragmaTableInfo, Rule, ServerSettings } from '@/types/db-types';
 
 let database: sqlite.Database;
 
@@ -46,7 +46,7 @@ async function connect(): Promise<void> {
 	let hasForumModApps = false;
 	let hasNetworkModApps = false;
 	let hasJuxtModApps = false;
-	await database.each('SELECT * FROM pragma_table_info(\'server_settings\')', (_err, row) => {
+	await database.each('SELECT * FROM pragma_table_info(\'server_settings\')', (_err, row: PragmaTableInfo) => {
 		switch (row.name) {
 			case 'ay_lmao_disabled':
 				hasAyLmaoColumn = true;
@@ -131,8 +131,8 @@ async function updateGuildSetting<K extends keyof ServerSettings>(guildId: strin
 }
 
 async function checkAutomaticHelpDisabled(guildId: string, memberId: string): Promise<boolean> {
-	const result = await database.get('SELECT EXISTS (SELECT 1 FROM nlp_disabled WHERE guild_id=? AND member_id=? LIMIT 1)', [guildId, memberId]);
-	return Boolean(Object.values(result)[0]); // * Hack. sqlite returns objects not values, need to get the value from the object
+	const result = await database.get<object>('SELECT EXISTS (SELECT 1 FROM nlp_disabled WHERE guild_id=? AND member_id=? LIMIT 1)', [guildId, memberId]);
+	return Boolean(Object.values(result!)[0]); // * Hack. sqlite returns objects not values, need to get the value from the object
 }
 
 async function disableAutomaticHelp(guildId: string, memberId: string): Promise<void> {
@@ -197,7 +197,7 @@ async function getPollInfo(pollId: string): Promise<Omit<PollInfo, 'channelId'>>
 	return {
 		pollId,
 		title: poll.title,
-		options: JSON.parse(poll.options),
+		options: JSON.parse(poll.options) as string[],
 		votes: JSON.parse(poll.votes) as number[],
 		expiryTime: Number(poll.expiry_time)
 	};
@@ -211,7 +211,7 @@ async function getAllPollInfo(): Promise<PollInfo[]> {
 			pollId: row.poll_id,
 			channelId: row.channel_id,
 			title: row.title,
-			options: JSON.parse(row.options),
+			options: JSON.parse(row.options) as string[],
 			votes: JSON.parse(row.votes) as number[],
 			expiryTime: Number(row.expiry_time)
 		});
@@ -225,12 +225,8 @@ async function closePoll(pollId: string): Promise<void> {
 }
 
 async function doesPollExist(pollId: string): Promise<boolean> {
-	const poll = await database.get('SELECT COUNT(*) FROM polls WHERE poll_id=? LIMIT 1', [pollId]);
-	if (Object.values(poll)[0] === 0) {
-		return false;
-	} else {
-		return true;
-	}
+	const poll = await database.get<object>('SELECT COUNT(*) FROM polls WHERE poll_id=? LIMIT 1', [pollId]);
+	return Object.values(poll!)[0] !== 0;
 }
 
 async function createRule(guildId: string, title: string, description: string, time: string): Promise<void> {

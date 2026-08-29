@@ -22,7 +22,7 @@ async function confirmRuleUpdateHandler(interaction: ButtonInteraction): Promise
 		await updateRule(interaction.guildId!, id, title, description, time);
 	}
 
-	interaction.reply({
+	await interaction.reply({
 		content: 'Rule updated!',
 		flags: MessageFlags.Ephemeral
 	});

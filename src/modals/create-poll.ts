@@ -47,7 +47,7 @@ async function createPollHandler(interaction: ModalSubmitInteraction): Promise<v
 		name: 'image.png'
 	});
 
-	interaction.editReply({
+	await interaction.editReply({
 		files: [attachment]
 	});
 }

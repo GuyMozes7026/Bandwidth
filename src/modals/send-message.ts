@@ -1,6 +1,6 @@
 import { TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalBuilder, MessageFlags } from 'discord.js';
 import type { ModalHandler } from '@/types/general-types';
-import type { ModalSubmitInteraction, SendableChannels } from 'discord.js';
+import type { MessagePayload, ModalSubmitInteraction, SendableChannels } from 'discord.js';
 
 const payloadTextInput = new TextInputBuilder();
 payloadTextInput.setCustomId('payload');
@@ -25,7 +25,7 @@ async function sendMessageHandler(interaction: ModalSubmitInteraction): Promise<
 
 	const payload = interaction.fields.getTextInputValue('payload').trim();
 
-	const messagePayload = JSON.parse(payload);
+	const messagePayload = JSON.parse(payload) as MessagePayload;
 	await (interaction.channel as SendableChannels).send(messagePayload);
 
 	await interaction.editReply({

@@ -48,3 +48,7 @@ export interface Rule {
 	description: string;
 	time: string;
 }
+
+export interface PragmaTableInfo {
+	name: string;
+}

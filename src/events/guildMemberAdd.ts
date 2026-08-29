@@ -36,6 +36,6 @@ export default async function guildMemberAddHandler(member: GuildMember): Promis
 
 	if (await getGuildSetting(member.guild.id, 'unverified_role_id') !== undefined) {
 		const role = guild.roles.cache.get(await getGuildSetting(member.guild.id, 'unverified_role_id'));
-		member.roles.add(role!);
+		await member.roles.add(role!);
 	}
 }

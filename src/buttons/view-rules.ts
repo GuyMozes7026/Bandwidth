@@ -57,7 +57,7 @@ async function viewRulesHandler(interaction: ButtonInteraction): Promise<void> {
 
 	let time = Number(rule.time);
 	if (time !== 0) {
-		function countdown(): void {
+		async function countdown(): Promise<void> {
 			nextButton.setLabel(time === 0 ? 'Next' : `Next (${time})`);
 			nextButton.setDisabled(time !== 0);
 			time -= 1;
@@ -68,20 +68,20 @@ async function viewRulesHandler(interaction: ButtonInteraction): Promise<void> {
 				clearInterval(timer);
 				if (rules[ruleId + 1] === undefined) {
 					row.setComponents(verifyCompleteButton);
-					interaction.editReply({ components: [row] });
+					await interaction.editReply({ components: [row] });
 				}
 			}
 
-			interaction.editReply({ components: [row] });
+			await interaction.editReply({ components: [row] });
 		}
 
 		// * call once immediately then once every second
-		countdown();
+		await countdown();
 		const timer = setInterval(countdown, 1000);
 	} else {
 		if (rules[ruleId + 1] === undefined) {
 			row.setComponents(verifyCompleteButton);
-			interaction.editReply({ components: [row] });
+			await interaction.editReply({ components: [row] });
 		}
 	}
 }

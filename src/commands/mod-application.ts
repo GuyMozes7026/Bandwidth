@@ -98,7 +98,7 @@ async function modApplicationHandler(interaction: ChatInputCommandInteraction): 
 		return;
 	}
 
-	interaction.showModal(modApplicationModal);
+	await interaction.showModal(modApplicationModal);
 }
 
 const command = new SlashCommandBuilder()

@@ -82,10 +82,10 @@ command.addSubcommand((cmd) => {
 		option.setDescription('Key to modify');
 		option.setRequired(true);
 
-		for (const setting in editableOptions) {
+		for (const setting of editableOptions) {
 			option.addChoices({
-				name: editableOptions[setting],
-				value: editableOptions[setting]
+				name: setting,
+				value: setting
 			});
 		}
 		return option;
@@ -106,10 +106,10 @@ command.addSubcommand((cmd) => {
 		option.setDescription('Key to modify');
 		option.setRequired(true);
 
-		for (const setting in editableOptions) {
+		for (const setting of editableOptions) {
 			option.addChoices({
-				name: editableOptions[setting],
-				value: editableOptions[setting]
+				name: setting,
+				value: setting
 			});
 		}
 		return option;

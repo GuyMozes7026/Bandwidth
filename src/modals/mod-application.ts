@@ -92,8 +92,7 @@ async function modApplicationHandler(interaction: ModalSubmitInteraction): Promi
 			selectedDBItem = 'juxt_mod_apps_channel_id';
 			break;
 		default:
-			console.error(`Unexpected modType ${modType} from interaction customId ${interaction.customId}`);
-			throw new Error('application failed to submit - channel not setup!');
+			throw new Error(`application failed to submit - Unexpected modType ${modType} from interaction customId ${interaction.customId}`);
 	}
 
 	const channelId = await getGuildSetting(interaction.guildId!, selectedDBItem);

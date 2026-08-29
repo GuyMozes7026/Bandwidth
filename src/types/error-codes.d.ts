@@ -1,5 +1,6 @@
 // ! Should ideally be part of https://github.com/PretendoNetwork/error-codes
 // ! See PR https://github.com/PretendoNetwork/error-codes/pull/37
+// ! (It has now been merged to dev but still not to master)
 
 declare module '@pretendonetwork/error-codes' {
 	export interface ModuleInfo {

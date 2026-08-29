@@ -36,4 +36,6 @@ client.on(Events.InteractionCreate, interactionCreateHandler);
 client.on(Events.MessageCreate, messageCreateHandler);
 client.on(Events.ThreadCreate, threadCreateHandler);
 
-client.login(config.bot_token);
+client.login(config.bot_token).catch((error) => {
+	console.error('Client login failed: ' + error);
+});
