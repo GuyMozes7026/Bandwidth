@@ -26,10 +26,10 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 	--mount=type=cache,target=/root/.npm \
 	npm ci
 
-RUN npm run build
-
 COPY . .
 
+RUN --mount=type=bind,source=config.example.json,target=config.json \
+	npm run build
 
 # * Running the final application
 FROM base AS final
