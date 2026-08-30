@@ -26,6 +26,8 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 	--mount=type=cache,target=/root/.npm \
 	npm ci
 
+RUN npm run build
+
 COPY . .
 
 
@@ -43,4 +45,4 @@ COPY --from=dependencies ${app_dir}/node_modules ${app_dir}/node_modules
 
 VOLUME ["./config.json", "./database.db"]
 
-CMD ["node", "./src/bot"]
+CMD ["node", "./dist/bot"]
