@@ -2,7 +2,7 @@
   "name": "bandwidth",
   "version": "1.0.0",
   "description": "Official Pretendo Network Discord community bot",
-  "main": "src/bot.js",
+  "main": "dist/bot.js",
   "scripts": {
     "lint": "eslint .",
     "start": "node ./dist/bot",
