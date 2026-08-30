@@ -40,7 +40,7 @@ USER node
 
 COPY package.json .
 
-COPY --from=build ${app_dir} ${app_dir}
+COPY --from=build ${app_dir}/dist ${app_dir}/dist
 COPY --from=dependencies ${app_dir}/node_modules ${app_dir}/node_modules
 
 VOLUME ["./config.json", "./database.db"]
