@@ -1,7 +1,7 @@
 import { PermissionFlagsBits } from 'discord.js';
 import { ContextMenuCommandBuilder } from '@discordjs/builders';
 import { ApplicationCommandType, MessageFlags } from 'discord-api-types/v10';
-import reportUserModalHandler from '../../modals/report-user';
+import reportUserModalHandler from '@/modals/report-user';
 import type { ContextMenuHandler } from '@/types/general-types';
 import type { ContextMenuCommandInteraction } from 'discord.js';
 

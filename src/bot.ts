@@ -6,7 +6,7 @@ import interactionCreateHandler from '@/events/interactionCreate';
 import messageCreateHandler from '@/events/messageCreate';
 import threadCreateHandler from '@/events/threadCreate';
 import config from '@/../config.json';
-import type { ButtonHandler, CommandHandler, ContextMenuHandler, ModalHandler, SelectMenuHandler } from './types/general-types';
+import type { ButtonHandler, CommandHandler, ContextMenuHandler, ModalHandler, SelectMenuHandler } from '@/types/general-types';
 
 const client = new Client({
 	intents: [

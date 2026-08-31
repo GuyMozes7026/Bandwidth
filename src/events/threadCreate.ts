@@ -1,8 +1,8 @@
 import timers from 'node:timers/promises';
 import { ChannelType, ActionRowBuilder, EmbedBuilder } from 'discord.js';
 import { checkAutomaticHelpDisabled } from '@/database';
-import expandErrorButtonHandler from '../buttons/expand-error';
-import { checkForErrorCode } from '../utils/errorCode';
+import expandErrorButtonHandler from '@/buttons/expand-error';
+import { checkForErrorCode } from '@/utils/errorCode';
 import type { ButtonBuilder, ThreadChannel } from 'discord.js';
 
 const expandErrorButton = expandErrorButtonHandler.button;

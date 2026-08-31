@@ -1,9 +1,9 @@
 import { MessageFlags } from 'discord.js';
 import buttonHandler from '@/handlers/button-handler';
-import chatInputCommandHandler from '../handlers/chat-input-command-handler';
-import contextMenuHandler from '../handlers/context-menu-handler';
-import selectMenuHandler from '../handlers/select-menu-handler';
-import modalSubmitHandler from '../handlers/modal-submit-handler';
+import chatInputCommandHandler from '@/handlers/chat-input-command-handler';
+import contextMenuHandler from '@/handlers/context-menu-handler';
+import selectMenuHandler from '@/handlers/select-menu-handler';
+import modalSubmitHandler from '@/handlers/modal-submit-handler';
 import type { Interaction } from 'discord.js';
 
 export default async function interactionCreateHandler(interaction: Interaction): Promise<void> {

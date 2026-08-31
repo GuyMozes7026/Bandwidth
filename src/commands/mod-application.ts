@@ -1,7 +1,7 @@
 import { MessageFlags, PermissionFlagsBits } from 'discord.js';
 import { EmbedBuilder, SlashCommandBuilder } from '@discordjs/builders';
 import { getGuildSetting } from '@/database';
-import modApplicationModalHandler from '../modals/mod-application';
+import modApplicationModalHandler from '@/modals/mod-application';
 import type { CommandHandler } from '@/types/general-types';
 import type { ServerSettings } from '@/types/db-types';
 import type { ChatInputCommandInteraction, GuildMember } from 'discord.js';

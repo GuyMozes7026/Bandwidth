@@ -1,5 +1,5 @@
 import { ButtonBuilder, ButtonStyle } from 'discord.js';
-import { checkForErrorCode } from '../utils/errorCode';
+import { checkForErrorCode } from '@/utils/errorCode';
 import type { ButtonHandler } from '@/types/general-types';
 import type { APIButtonComponentWithCustomId, ButtonInteraction } from 'discord.js';
 

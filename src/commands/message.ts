@@ -1,6 +1,14 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
-import { ActionRowBuilder, AttachmentBuilder, MessageFlags, ModalBuilder, PermissionFlagsBits, TextInputBuilder, TextInputStyle } from 'discord.js';
-import sendMessageModalHandler from '../modals/send-message';
+import {
+	ActionRowBuilder,
+	AttachmentBuilder,
+	MessageFlags,
+	ModalBuilder,
+	PermissionFlagsBits,
+	TextInputBuilder,
+	TextInputStyle,
+	SlashCommandBuilder
+} from 'discord.js';
+import sendMessageModalHandler from '@/modals/send-message';
 import type { CommandHandler } from '@/types/general-types';
 import type { ChatInputCommandInteraction } from 'discord.js';
 

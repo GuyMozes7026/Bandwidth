@@ -1,7 +1,7 @@
 import { TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { getGuildSetting } from '@/database';
-import acceptButtonHandler from '../buttons/mod-application-accept';
-import denyButtonHandler from '../buttons/mod-application-deny';
+import acceptButtonHandler from '@/buttons/mod-application-accept';
+import denyButtonHandler from '@/buttons/mod-application-deny';
 import type { ModalHandler } from '@/types/general-types';
 import type { ServerSettings } from '@/types/db-types';
 import type { ButtonBuilder, GuildMember, ModalSubmitInteraction } from 'discord.js';

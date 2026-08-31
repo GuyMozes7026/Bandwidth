@@ -1,6 +1,6 @@
 import { ButtonBuilder, ButtonStyle, ActionRowBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { getAllRules } from '@/database';
-import verifyCompleteButtonHandler from './verify-complete';
+import verifyCompleteButtonHandler from '@/buttons/verify-complete';
 import type { ButtonHandler } from '@/types/general-types';
 import type { APIButtonComponentWithCustomId, ButtonInteraction } from 'discord.js';
 

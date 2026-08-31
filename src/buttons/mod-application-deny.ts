@@ -1,5 +1,5 @@
 import { ButtonBuilder, ButtonStyle } from 'discord.js';
-import denyModApplicationModalHandler from '../modals/mod-application-deny';
+import denyModApplicationModalHandler from '@/modals/mod-application-deny';
 import type { ButtonHandler } from '@/types/general-types';
 import type { APIButtonComponentWithCustomId, ButtonInteraction } from 'discord.js';
 

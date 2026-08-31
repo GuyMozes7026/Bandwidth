@@ -3,7 +3,7 @@ import { glob } from 'glob';
 import { ActivityType, PresenceUpdateStatus } from 'discord.js';
 import { connect } from '@/database';
 import { updatePolls } from '@/utils/polls';
-import { setupGuild } from '../setup-guild';
+import { setupGuild } from '@/setup-guild';
 import type { BaseHandler } from '@/types/general-types';
 import type { Client, Collection } from 'discord.js';
 

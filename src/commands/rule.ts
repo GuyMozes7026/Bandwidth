@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ActionRowBuilder, MessageFlags, PermissionFlagsBits, StringSelectMenuBuilder } from 'discord.js';
 import { getAllRules } from '@/database';
-import updateRuleModalHandler from '../modals/update-rule';
+import updateRuleModalHandler from '@/modals/update-rule';
 import type { CommandHandler } from '@/types/general-types';
 import type { ChatInputCommandInteraction } from 'discord.js';
 
