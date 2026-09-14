@@ -1,19 +1,20 @@
 import path from 'path';
 import fs from 'fs';
 import sqlite3 from 'sqlite3';
-import sqlite from 'sqlite';
+import { open as openSQLite } from 'sqlite';
 import { db_path } from '@/../config.json';
+import type { Database } from 'sqlite';
 import type { PollInfo } from '@/types/general-types';
 import type { CommandCooldown, Poll, PragmaTableInfo, Rule, ServerSettings } from '@/types/db-types';
 
-let database: sqlite.Database;
+let database: Database;
 
 const resolvedDbPath = db_path ?? path.join(__dirname, '../database.db');
 const dbFolder = path.dirname(resolvedDbPath);
 fs.mkdirSync(dbFolder, { recursive: true });
 
 async function connect(): Promise<void> {
-	database = await sqlite.open({
+	database = await openSQLite({
 		filename: resolvedDbPath,
 		driver: sqlite3.Database
 	});
