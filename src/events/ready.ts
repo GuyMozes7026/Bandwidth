@@ -83,9 +83,9 @@ function _setRandomStatus(client: Client): void {
 async function loadBotHandlersCollection(name: string, collection: Collection<string, BaseHandler>): Promise<void> {
 	const files = await glob(`${__dirname}/../${name}/**/*.[jt]s`);
 
-	for (const file of files) {
+	await Promise.all(files.map(async (file) => {
 		const handler = await import(path.resolve(file)) as BaseHandler;
 
 		collection.set(handler.name, handler);
-	}
+	}));
 }
