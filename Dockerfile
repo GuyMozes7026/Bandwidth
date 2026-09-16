@@ -28,6 +28,9 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 
 COPY . .
 
+# Since the code references config.json directly via import,
+# this hack uses config.example.json temporarily just for the build to complete.
+# In runtime, it will still look for the real config.json.
 RUN --mount=type=bind,source=config.example.json,target=config.json \
 	npm run build
 
