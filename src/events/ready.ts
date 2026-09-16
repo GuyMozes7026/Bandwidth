@@ -81,7 +81,11 @@ function _setRandomStatus(client: Client): void {
 }
 
 async function loadBotHandlersCollection(name: string, collection: Collection<string, BaseHandler>): Promise<void> {
-	const files = await glob(`${__dirname}/../${name}/**/*.[jt]s`);
+	const globPattern = process.env.NODE_ENV === 'production'
+		? `dist/${name}/**/*.js`
+		: `src/${name}/**/*.ts`;
+
+	const files = await glob(globPattern);
 
 	await Promise.all(files.map(async (file) => {
 		const handler = (await import(path.resolve(file))).default as BaseHandler;
