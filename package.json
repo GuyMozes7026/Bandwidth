@@ -5,8 +5,7 @@
   "main": "dist/bot.js",
   "scripts": {
     "lint": "eslint .",
-    "start": "node ./dist/bot",
-    "start:dev": "ts-node-dev --files -r tsconfig-paths/register ./src/bot",
+    "start": "ts-node-dev --files -r tsconfig-paths/register ./src/bot",
     "copy-static": "copyfiles -e \"src/**/*.ts\" -u 1 \"src/**/*\" dist",
     "build": "tsc && tsc-alias && npm run copy-static"
   },
