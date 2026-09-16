@@ -84,7 +84,7 @@ async function loadBotHandlersCollection(name: string, collection: Collection<st
 	const files = await glob(`${__dirname}/../${name}/**/*.[jt]s`);
 
 	await Promise.all(files.map(async (file) => {
-		const handler = await import(path.resolve(file)) as BaseHandler;
+		const handler = (await import(path.resolve(file))).default as BaseHandler;
 
 		collection.set(handler.name, handler);
 	}));
